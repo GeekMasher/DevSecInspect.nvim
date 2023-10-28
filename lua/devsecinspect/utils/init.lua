@@ -1,5 +1,47 @@
 local M = {}
 
+--- Debugging function
+---@param msg string
+---@param opts table | nil
+function M.debug(msg, opts)
+    local config = require("devsecinspect.config").config
+    local panel = require("devsecinspect.ui.panel")
+
+    opts = opts or {}
+    if config.debug == true then
+        panel.messages[#panel.messages + 1] = "[" .. config.symbols.debug .. "] " .. msg
+    end
+end
+
+--- Info function
+---@param msg string
+---@param opts table | nil
+function M.info(msg, opts)
+    local config = require("devsecinspect.config").config
+    local panel = require("devsecinspect.ui.panel")
+
+    opts = opts or {}
+    panel.messages[#panel.messages + 1] = "[" .. config.symbols.info .. "] " .. msg
+end
+
+function M.warning(msg, opts)
+    local config = require("devsecinspect.config").config
+    local panel = require("devsecinspect.ui.panel")
+
+    opts = opts or {}
+    panel.messages[#panel.messages + 1] = "[" .. config.symbols.warning .. "] " .. msg
+    vim.api.nvim_err_writeln(msg)
+end
+
+function M.error(msg, opts)
+    local config = require("devsecinspect.config").config
+    local panel = require("devsecinspect.ui.panel")
+
+    opts = opts or {}
+    panel.messages[#panel.messages + 1] = "[" .. config.symbols.error .. "] " .. msg
+    vim.api.nvim_err_writeln(msg)
+end
+
 --- Merge a table with another table
 ---@param t1 table
 ---@param t2 table
@@ -50,11 +92,18 @@ function M.match_globs(filepath, filters)
     return false
 end
 
+--- Check if the current buffer is a supported language
+---@param bufrn any
+---@param languages any
+---@return boolean
 function M.match_language(bufrn, languages)
+    languages = languages or {}
     local filetype = vim.api.nvim_buf_get_option(bufrn, "filetype")
-    print("FILETYPE :: " .. filetype)
 
     if not filetype then
+        return false
+    elseif #languages == 0 then
+        print("Languages is empty... this shouldn't happen")
         return false
     end
 
@@ -105,6 +154,32 @@ function M.read_file(filepath)
     local content = f:read("*all")
     f:close()
     return content
+end
+
+--- Split a string
+---@param str any
+---@return table
+function M.split(str, char)
+    local t = {}
+    for w in string.gmatch(str, "([^" .. char .. "]+)") do
+        table.insert(t, w)
+    end
+    return t
+end
+
+--- Contains a string in a table of strings
+---@param str string
+---@param data table
+---@return boolean
+function M.contains(str, data)
+    if type(data) == "table" then
+        for _, v in ipairs(data) do
+            if string.find(str, v) then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 return M

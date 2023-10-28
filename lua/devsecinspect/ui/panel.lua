@@ -16,11 +16,14 @@ M.tools = {}
 -- list of alerts
 M.alerts = {}
 
+-- list of messages
+M.messages = {}
+
 --- Create the panel
 ---@param name string
 ---@param data table optional
 ---@param opts table optional
-function M.create_panel(name, data, opts)
+function M.create(name, data, opts)
     data = data or {}
     opts = opts or {}
 
@@ -38,12 +41,12 @@ function M.create_panel(name, data, opts)
                 }
             },
             position = {
-                row = "0%",
-                col = "100%"
+                row = config.config.panel.position.row,
+                col = config.config.panel.position.col,
             },
             size = {
-                width = "30%",
-                height = "97%",
+                width = config.config.panel.size.width,
+                height = config.config.panel.size.height,
             },
             buf_options = {
                 modifiable = true,
@@ -101,7 +104,8 @@ end
 ---@param data table
 function M.append_data(data, opts)
     opts = opts or {}
-    local result = {}
+    -- get previous data from panel
+    local result = vim.api.nvim_buf_get_lines(M.panel.bufnr, 0, -1, true)
 
     if M.panel and data ~= nil then
         if opts.header then
@@ -128,16 +132,6 @@ function M.append_data(data, opts)
     end
 end
 
---- Append a tool to the panel
----@param name string
----@param status boolean
-function M.append_tool(name, status)
-    if type(name) ~= "string" then
-        return
-    end
-    M.tools[#M.tools + 1] = " -> " .. (status and "✅ " or "❌ ") .. name
-end
-
 function M.render(filepath)
     filepath = filepath or vim.fn.expand("%:p")
 
@@ -145,6 +139,10 @@ function M.render(filepath)
 
     M.render_tools()
     M.render_alerts()
+
+    -- if config.config.debug == true then
+    M.render_messages()
+    -- end
 end
 
 --- Render the alerts
@@ -167,15 +165,55 @@ function M.render_alerts()
     end
 end
 
+-- Tools
+
+--- Append a tool to the panel
+---@param tool table
+function M.append_tool(tool, opts)
+    opts = opts or {}
+    if type(tool) ~= "table" then
+        return
+    end
+
+    local name = tool.name
+    local status = tool.status
+
+    M.tools[#M.tools + 1] = {
+        name = name,
+        status = status,
+        message = opts.message
+    }
+end
+
+--- Render the tools
 function M.render_tools()
     local available_tools = {}
 
     for _, tool in pairs(M.tools) do
-        available_tools[#available_tools + 1] = tool
+        local status = tool.status and config.config.symbols.enabled or config.config.symbols.disabled
+        local msg = " -> " .. status .. " " .. tool.name
+
+        if tool.message then
+            msg = msg .. " [" .. tool.message .. "]"
+        end
+
+        available_tools[#available_tools + 1] = msg
     end
     -- add empty line
     M.append_data(available_tools, {
-        header = { "Available Tools", "" },
+        header = { "Setup Tools", "" },
+        footer = true
+    })
+end
+
+function M.render_messages()
+    local msgs = {}
+    for _, msg in pairs(M.messages) do
+        msgs[#msgs + 1] = msg
+    end
+
+    M.append_data(msgs, {
+        header = { "Messages", "" },
         footer = true
     })
 end

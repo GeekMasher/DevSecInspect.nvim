@@ -4,6 +4,7 @@ local M = {}
 M.bufnr = nil
 M.filepath = nil
 
+-- Table of all the results from the tools
 M.results = {}
 
 function M.check_results(tool)
@@ -16,23 +17,39 @@ end
 --- Add Alerts to the alerts table
 ---@param alert table
 function M.add_alert(tool, alert)
-    -- check required fields
-    if not alert.name then
-        vim.api.nvim_err_writeln("Alert missing required fields")
+    M.append(tool, alert)
+end
+
+--- Add an alert to the alerts table
+---@param tool string
+---@param alert table
+function M.append(tool, alert)
+    if tool == nil or alert == nil then
+        vim.api.nvim_err_writeln("Tool and alert is required")
         return
     end
-    -- set default location
-    if not alert.location then
-        local filepath = vim.fn.expand("%:p")
-        alert.location = { file = filepath, line = 0 }
+
+    if not alert.name or not alert.location then
+        vim.api.nvim_err_writeln("Alert missing required fields")
+        return
     end
 
     if not M.results[tool] then
         M.results[tool] = {}
     end
+    -- TODO(geekmasher): does column matter?
+    local alertkey = alert.name .. "#" .. alert.location.line
+    if not M.results[tool][alertkey] then
+        M.results[tool][alertkey] = alert
+    end
+end
 
-    if not M.results[tool][alert.name] then
-        M.results[tool][alert.name] = alert
+--- Extend the alerts table
+---@param tool string
+---@param results table
+function M.extend(tool, results)
+    for _, result in ipairs(results) do
+        M.append(tool, result)
     end
 end
 

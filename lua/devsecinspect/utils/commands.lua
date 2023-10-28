@@ -1,4 +1,7 @@
-local panel = require("devsecinspect.panel")
+local ui = require("devsecinspect.ui")
+local panel = require("devsecinspect.ui.panel")
+local config = require("devsecinspect.config")
+local utils = require("devsecinspect.utils")
 
 local CMD = {}
 
@@ -37,7 +40,7 @@ function CMD.run(command, args, callback, opts)
     end
 
     if opts.foreground then
-        print("Running in foreground: " .. command)
+        utils.debug("Running in foreground: " .. command)
         vim.schedule(function()
             local data = vim.fn.system(cmd)
             callback(_, data)
@@ -53,6 +56,7 @@ function CMD.run(command, args, callback, opts)
                 end
 
                 callback(data)
+                ui.refresh()
             end
         })
     end

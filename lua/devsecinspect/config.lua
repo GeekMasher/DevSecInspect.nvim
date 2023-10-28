@@ -8,16 +8,37 @@ M.ready = false
 function M.setup(opts)
     local utils = require("devsecinspect.utils")
     local default = {
+        -- Debugging mode
+        debug = false,
+        -- Enable autocmd
         autocmd = true,
+        -- Tools
         tools = {},
+        -- Custom Tools
+        custom_tools = {},
+        -- Panel config
         panel = {
-            enable = false
+            enable = false,
+            position = {
+                row = "0%",
+                col = "100%"
+            },
+            size = {
+                width = "30%",
+                height = "97%",
+            },
         },
         symbols = {
+            -- Icons
+            info = " ",
+            debug = " ",
             error = " ",
             warning = " ",
-            info = " ",
-            hint = " "
+            hint = " ",
+            -- Statuses
+            enabled = "",
+            disabled = "",
+            running = "",
         }
     }
 
