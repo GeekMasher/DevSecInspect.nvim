@@ -140,9 +140,9 @@ function M.render(filepath)
     M.render_tools()
     M.render_alerts()
 
-    -- if config.config.debug == true then
-    M.render_messages()
-    -- end
+    if config.config.debug == true then
+        M.render_messages()
+    end
 end
 
 --- Render the alerts
