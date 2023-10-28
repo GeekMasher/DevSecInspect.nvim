@@ -2,10 +2,12 @@ local utils    = require("devsecinspect.utils")
 local commands = require("devsecinspect.utils.commands")
 local alerts   = require("devsecinspect.alerts")
 local config   = require("devsecinspect.config")
-local panel    = require("devsecinspect.panel")
+local ui       = require("devsecinspect.ui")
 
 local M        = {}
-M.name         = "cargo-audit"
+M.globs        = {
+    "Cargo.toml"
+}
 M.config       = {}
 
 --- Setup cargo-audit
@@ -24,6 +26,7 @@ function M.setup(opts)
 end
 
 --- Check if cargo-audit is installed
+---@return boolean
 function M.check()
     return commands.check({ M.config.path, "--version" })
 end
@@ -56,8 +59,6 @@ function M.run(bufnr, filepath)
                 })
             end
         end
-
-        panel.render()
     end)
 end
 

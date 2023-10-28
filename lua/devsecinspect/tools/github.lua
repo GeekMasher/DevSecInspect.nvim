@@ -2,6 +2,7 @@ local utils = require("devsecinspect.utils")
 
 local M = {}
 M.name = "github"
+M.type = "service"
 M.config = {}
 
 --- Setup cargo-audit
