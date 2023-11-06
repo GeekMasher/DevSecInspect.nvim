@@ -14,8 +14,15 @@ function M.setup(opts)
         autocmd = true,
         -- Tools
         tools = {},
+        default_tools = true,
         -- Custom Tools
         custom_tools = {},
+        -- Auto-fix
+        autofix = {
+            enable = false,
+            ai_enable = false,
+            ai_tool = "copilot",
+        },
         -- Panel config
         panel = {
             enable = false,
@@ -43,6 +50,11 @@ function M.setup(opts)
     }
 
     M.config = utils.table_merge(default, opts or {})
+
+    if M.config.default_tools == true then
+        M.config.tools["cargoaudit"] = {}
+        M.config.tools["npmaudit"] = {}
+    end
 end
 
 return M

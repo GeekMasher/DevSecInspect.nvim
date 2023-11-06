@@ -37,7 +37,7 @@ function M.create(name, data, opts)
             border = {
                 style = "rounded",
                 text = {
-                    top = ' ' .. name .. ' '
+                    top = ' DevSecInspect Alerts '
                 }
             },
             position = {
@@ -88,6 +88,17 @@ end
 function M.clear()
     if M.panel and M.panel.bufnr then
         vim.api.nvim_buf_set_lines(M.panel.bufnr, 0, -1, true, {})
+    end
+end
+
+function M.on_resize()
+    if M.panel ~= nil then
+        M.panel:update_layout({
+            size = {
+                width = config.config.panel.size.width,
+                height = config.config.panel.size.height,
+            }
+        })
     end
 end
 

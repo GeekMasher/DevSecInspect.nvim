@@ -2,7 +2,6 @@ local cnf    = require("devsecinspect.config")
 local tools  = require("devsecinspect.tools")
 local utils  = require("devsecinspect.utils")
 local ui     = require("devsecinspect.ui")
-local panel  = require("devsecinspect.ui.panel")
 local alerts = require("devsecinspect.alerts")
 
 local M      = {}
@@ -21,8 +20,20 @@ function M.setup(opts)
     ui.refresh()
 
     -- setup autocmd
+    local group = vim.api.nvim_create_augroup(cnf.name, { clear = true })
+
+    -- on resize
+    vim.api.nvim_create_autocmd({ "WinResized" }, {
+        group = group,
+        callback = function()
+            vim.schedule(function()
+                ui.on_resize()
+            end)
+        end
+    })
+
+
     if cnf.config.autocmd then
-        local group = vim.api.nvim_create_augroup(cnf.name, { clear = true })
         vim.api.nvim_create_autocmd({ "BufEnter" }, {
             group = group,
             callback = function()
@@ -47,6 +58,9 @@ function M.setup(opts)
     -- Commands
     vim.api.nvim_create_user_command("DSI", function()
         tools.analyse()
+    end, {})
+    vim.api.nvim_create_user_command("DSIInstall", function()
+        ui.open("tools")
     end, {})
 end
 

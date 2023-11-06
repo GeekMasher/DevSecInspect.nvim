@@ -1,4 +1,5 @@
 local config = require("devsecinspect.config")
+local utils = require("devsecinspect.utils")
 
 local M = {}
 M.bufnr = nil
@@ -25,14 +26,21 @@ end
 ---@param alert table
 function M.append(tool, alert)
     if tool == nil or alert == nil then
-        vim.api.nvim_err_writeln("Tool and alert is required")
+        utils.error("Tool and alert is required")
         return
     end
 
-    if not alert.name or not alert.location then
-        vim.api.nvim_err_writeln("Alert missing required fields")
+    if not alert.name then
+        utils.error("Alert missing required `name` field")
         return
     end
+
+    if not alert.location then
+        alert.location = { line = 0, column = 0 }
+    end
+
+    -- Add the tool to the alert
+    alert.tool = tool
 
     if not M.results[tool] then
         M.results[tool] = {}
@@ -76,7 +84,9 @@ function M.reset(bufnr, ns)
     ns = ns or vim.api.nvim_create_namespace(config.name)
     vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
     vim.diagnostic.reset(ns, bufnr)
+end
 
+function M.clear(bufnr)
     M.results = {}
 end
 
