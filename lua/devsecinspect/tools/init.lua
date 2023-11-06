@@ -14,30 +14,42 @@ M.selected = {}
 -- list of tools
 M.tools = {
     cargoaudit = {
-        name = "cargo-audit",
+        name = "Cargo Audit",
         author = "RustSec",
         type = "sca",
         tool = require("devsecinspect.tools.cargoaudit")
+    },
+    npmaudit = {
+        name = "NPM Audit",
+        author = "npm",
+        type = "sca",
+        tool = require("devsecinspect.tools.npmaudit")
     },
     -- SAST
     codeql = {
         name = "CodeQL",
         author = "GitHub",
         type = "sast",
-        tool = require("devsecinspect.tools.codeql")
+        tool = require("devsecinspect.tools.github.codeql")
+    },
+    bandit = {
+        name = "Bandit",
+        author = "PyCQA",
+        type = "sast",
+        tool = require("devsecinspect.tools.bandit")
     },
     semgrep = {
         name = "Semgrep OSS",
         author = "Semgrep",
         type = "sast",
-        tool = require("devsecinspect.tools.semgrep"),
+        tool = require("devsecinspect.tools.semgrep.oss"),
     },
     -- Services
     github = {
         name = "GitHub Advanced Security",
         author = "GitHub",
         type = "service",
-        tool = require("devsecinspect.tools.github"),
+        tool = require("devsecinspect.tools.github.advancedsecurity"),
     },
 }
 
@@ -121,6 +133,10 @@ function M.analyse(bufnr, filepath, opts)
     if vim.api.nvim_buf_get_option(bufnr, "buftype") ~= "" then
         return
     end
+
+    -- reset diagnostics
+    alerts.reset(bufnr)
+
     -- set state for alerts
     alerts.bufnr = bufnr
 
@@ -168,6 +184,40 @@ end
 
 function M.run(bufnr, filepath)
 
+end
+
+--- Autofix security alert if possible
+---@param bufnr integer
+---@param filepath string
+function M.autofix(bufnr, filepath)
+    bufnr = bufnr or vim.api.nvim_get_current_buf()
+    filepath = filepath or vim.fn.expand("%:p")
+
+    -- check config
+    if cnf.config.autofix ~= nil and cnf.config.autofix.enabled == false then
+        utils.error("Autofix is disabled")
+        return
+    end
+
+    for _, alert in pairs(alerts.alerts) do
+        if cnf.config.autofix.ai_enabled == true then
+            -- AI autofix
+            utils.error("AI is not implemented yet")
+        else
+            -- Run the tools autofix function (if available)
+            local tool = M.tools[alert.tool]
+            if tool == nil then
+                utils.error("Tool not found: " .. alert.tool)
+                return
+            end
+
+            if tool.tool.autofix ~= nil then
+                tool.tool.autofix(bufnr, filepath, alert)
+            else
+                utils.error("Tool cannot be autofixed: " .. alert.tool)
+            end
+        end
+    end
 end
 
 --- Append a custom tool
