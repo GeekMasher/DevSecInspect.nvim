@@ -1,12 +1,22 @@
 local config = require("devsecinspect.config")
 local utils = require("devsecinspect.utils")
+local Alert = require("devsecinspect.alerts.alert")
 
 local M = {}
 M.bufnr = nil
 M.filepath = nil
 
 -- Table of all the results from the tools
+-- category {
+--    instance {
+--        alert
+--    }
+-- }
 M.results = {}
+-- Table of all the unique keys for the results.
+M.result_summaries = {}
+
+
 
 function M.check_results(tool)
     if not M.results[tool] then
@@ -35,20 +45,26 @@ function M.append(tool, alert)
         return
     end
 
-    if not alert.location then
-        alert.location = { line = 0, column = 0 }
+    local alt = Alert:new(tool, alert.name, alert.location, {
+        message = alert.message,
+        category = alert.name,
+        severity = alert.severity,
+        cwes = alert.cwes,
+        paths = alert.paths,
+    })
+
+    -- build table tree
+    if not M.results[alt.category] then
+        M.results[alt.category] = {}
     end
 
-    -- Add the tool to the alert
-    alert.tool = tool
-
-    if not M.results[tool] then
-        M.results[tool] = {}
-    end
-    -- TODO(geekmasher): does column matter?
-    local alertkey = alert.name .. "#" .. alert.location.line
-    if not M.results[tool][alertkey] then
-        M.results[tool][alertkey] = alert
+    -- instance
+    local instance = alert.name .. "#" .. alert.location.line
+    if not M.results[alt.category][instance] then
+        utils.debug("Adding alert to results table")
+        M.results[alt.category][instance] = alert
+    else
+        utils.debug("Alert already exists in this instance")
     end
 end
 
@@ -61,23 +77,6 @@ function M.extend(tool, results)
     end
 end
 
-function M.show_diagnostic(bufnr, alert)
-    local ns = vim.api.nvim_create_namespace(config.name)
-
-    local location = alert.location or {}
-    local text = config.config.symbols.error .. " " .. alert.name
-
-    vim.api.nvim_buf_set_extmark(
-        bufnr, ns, location.line, 0,
-        {
-            hl_mode = "replace",
-            hl_group = "Alert",
-            virt_text_pos = "eol",
-            virt_text = { { text } }
-        }
-    )
-end
-
 --- Reset the alerts table
 function M.reset(bufnr, ns)
     bufnr = bufnr or vim.api.nvim_get_current_buf()
@@ -86,6 +85,7 @@ function M.reset(bufnr, ns)
     vim.diagnostic.reset(ns, bufnr)
 end
 
+--- Clear the alerts table
 function M.clear(bufnr)
     M.results = {}
 end

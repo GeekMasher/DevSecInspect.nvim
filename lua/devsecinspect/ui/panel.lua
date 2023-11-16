@@ -1,5 +1,4 @@
 local utils = require("devsecinspect.utils")
-local config = require("devsecinspect.config")
 
 -- https://github.com/MunifTanjim/nui.nvim
 local Popup = require("nui.popup")
@@ -7,29 +6,44 @@ local autocmd = require("nui.utils.autocmd")
 local event = autocmd.event
 
 
-local M = {}
-M.panel = nil
+local Debugging = {}
+-- Debugging config
+Debugging.config = {}
+-- Panel
+Debugging.panel = nil
 -- name of the file being inspected
-M.filepath = nil
+Debugging.filepath = nil
 -- list of available tools
-M.tools = {}
+Debugging.tools = {}
 -- list of alerts
-M.alerts = {}
+Debugging.alerts = {}
 
 -- list of messages
-M.messages = {}
+Debugging.messages = {}
+
+
+function Debugging.setup(opts)
+    Debugging.config.symbols = opts.symbols
+    utils.table_merge(Debugging.config, opts.debugging or {})
+
+    -- Setup Panel
+    Debugging.create("DevSecInspect Alerts", {}, { persistent = true })
+    if opts.enabled == true then
+        Debugging.open()
+    end
+end
 
 --- Create the panel
 ---@param name string
 ---@param data table optional
 ---@param opts table optional
-function M.create(name, data, opts)
+function Debugging.create(name, data, opts)
     data = data or {}
     opts = opts or {}
 
     local bufnr = vim.api.nvim_get_current_buf()
 
-    if M.panel == nil then
+    if Debugging.panel == nil then
         local panel = Popup({
             enter = false,
             focusable = false,
@@ -37,16 +51,16 @@ function M.create(name, data, opts)
             border = {
                 style = "rounded",
                 text = {
-                    top = ' DevSecInspect Alerts '
+                    top = ' DevSecInspect Debugging '
                 }
             },
             position = {
-                row = config.config.panel.position.row,
-                col = config.config.panel.position.col,
+                row = Debugging.config.panel.position.row or "79%",
+                col = Debugging.config.panel.position.col or "0%",
             },
             size = {
-                width = config.config.panel.size.width,
-                height = config.config.panel.size.height,
+                width = Debugging.config.panel.size.width or "70%",
+                height = Debugging.config.panel.size.height or "20%",
             },
             buf_options = {
                 modifiable = true,
@@ -60,43 +74,43 @@ function M.create(name, data, opts)
         if not opts.persistent then
             autocmd.buf.define(bufnr, event.CursorMoved, function()
                 panel:unmount()
-                M.panel = nil
+                Debugging.panel = nil
             end, { once = true })
         end
 
-        M.panel = panel
+        Debugging.panel = panel
     end
 
-    M.set_data(data)
+    Debugging.set_data(data)
 end
 
 --- Open the panel
-function M.open()
-    if M.panel then
-        M.panel:mount()
+function Debugging.open()
+    if Debugging.panel then
+        Debugging.panel:mount()
     end
 end
 
 --- Close the panel
-function M.close()
-    if M.panel then
-        M.panel:unmount()
+function Debugging.close()
+    if Debugging.panel then
+        Debugging.panel:unmount()
     end
 end
 
 --- Clear the panel
-function M.clear()
-    if M.panel and M.panel.bufnr then
-        vim.api.nvim_buf_set_lines(M.panel.bufnr, 0, -1, true, {})
+function Debugging.clear()
+    if Debugging.panel and Debugging.panel.bufnr then
+        vim.api.nvim_buf_set_lines(Debugging.panel.bufnr, 0, -1, true, {})
     end
 end
 
-function M.on_resize()
-    if M.panel ~= nil then
-        M.panel:update_layout({
+function Debugging.on_resize()
+    if Debugging.panel ~= nil then
+        Debugging.panel:update_layout({
             size = {
-                width = config.config.panel.size.width,
-                height = config.config.panel.size.height,
+                width = config.debugging.panel.size.width,
+                height = config.debugging.panel.size.height,
             }
         })
     end
@@ -104,21 +118,21 @@ end
 
 --- Set the data for the panel
 ---@param data table
-function M.set_data(data)
-    if M.panel and data ~= nil then
+function Debugging.set_data(data)
+    if Debugging.panel and data ~= nil then
         -- overwrite data and set it
-        vim.api.nvim_buf_set_lines(M.panel.bufnr, 0, -1, true, data)
+        vim.api.nvim_buf_set_lines(Debugging.panel.bufnr, 0, -1, true, data)
     end
 end
 
 --- Append data to the panel
 ---@param data table
-function M.append_data(data, opts)
+function Debugging.append_data(data, opts)
     opts = opts or {}
     -- get previous data from panel
-    local result = vim.api.nvim_buf_get_lines(M.panel.bufnr, 0, -1, true)
+    local result = vim.api.nvim_buf_get_lines(Debugging.panel.bufnr, 0, -1, true)
 
-    if M.panel and data ~= nil then
+    if Debugging.panel and data ~= nil then
         if opts.header then
             if type(opts.header) == "string" then
                 opts.header = { opts.footer }
@@ -128,7 +142,7 @@ function M.append_data(data, opts)
             utils.table_extend(result, opts.header)
         end
         -- append data
-        M.data = utils.table_extend(result, data)
+        Debugging.data = utils.table_extend(result, data)
 
         if opts.footer then
             if type(opts.footer) == "string" then
@@ -139,48 +153,34 @@ function M.append_data(data, opts)
             utils.table_extend(result, opts.footer)
         end
 
-        vim.api.nvim_buf_set_lines(M.panel.bufnr, 0, -1, true, result)
+        vim.api.nvim_buf_set_lines(Debugging.panel.bufnr, 0, -1, true, result)
     end
 end
 
-function M.render(filepath)
+--- Render the panel
+---@param bufnr any
+---@param filepath any
+function Debugging.render(bufnr, filepath)
     filepath = filepath or vim.fn.expand("%:p")
 
-    M.clear()
-
-    M.render_tools()
-    M.render_alerts()
-
-    if config.config.debug == true then
-        M.render_messages()
+    if Debugging.panel == nil or Debugging.config.enabled == false then
+        Debugging.close()
+        return
+    else
+        Debugging.open()
     end
-end
 
---- Render the alerts
-function M.render_alerts()
-    local alerts = require("devsecinspect.alerts")
-    local data = {}
+    Debugging.clear()
 
-    for alert_tool, alert in pairs(alerts.results) do
-        data[#data + 1] = " > " .. alert_tool
-
-        for _, alrt in pairs(alert) do
-            data[#data + 1] = "   - " .. alrt.name
-            alerts.show_diagnostic(alerts.bufnr, alrt)
-        end
-
-        M.append_data(data, {
-            header = { "Alerts - " .. alert_tool, "" },
-            footer = true
-        })
-    end
+    Debugging.render_tools()
+    Debugging.render_messages()
 end
 
 -- Tools
 
 --- Append a tool to the panel
 ---@param tool table
-function M.append_tool(tool, opts)
+function Debugging.append_tool(tool, opts)
     opts = opts or {}
     if type(tool) ~= "table" then
         return
@@ -189,7 +189,7 @@ function M.append_tool(tool, opts)
     local name = tool.name
     local status = tool.status
 
-    M.tools[#M.tools + 1] = {
+    Debugging.tools[#Debugging.tools + 1] = {
         name = name,
         status = status,
         message = opts.message
@@ -197,11 +197,20 @@ function M.append_tool(tool, opts)
 end
 
 --- Render the tools
-function M.render_tools()
-    local available_tools = {}
+function Debugging.render_tools()
+    -- sort tools by name
+    table.sort(Debugging.tools, function(a, b)
+        return a.name < b.name
+    end)
 
-    for _, tool in pairs(M.tools) do
-        local status = tool.status and config.config.symbols.enabled or config.config.symbols.disabled
+    local available_tools = {}
+    -- TODO(geekmasher): some sort of symbol issue but this works
+    local config = require("devsecinspect.config").config
+    local enable_symbol = config.symbols.enabled
+    local disable_symbol = config.symbols.disabled
+
+    for _, tool in pairs(Debugging.tools) do
+        local status = tool.status and enable_symbol or disable_symbol
         local msg = " -> " .. status .. " " .. tool.name
 
         if tool.message then
@@ -211,22 +220,22 @@ function M.render_tools()
         available_tools[#available_tools + 1] = msg
     end
     -- add empty line
-    M.append_data(available_tools, {
+    Debugging.append_data(available_tools, {
         header = { "Setup Tools", "" },
         footer = true
     })
 end
 
-function M.render_messages()
+function Debugging.render_messages()
     local msgs = {}
-    for _, msg in pairs(M.messages) do
+    for _, msg in pairs(Debugging.messages) do
         msgs[#msgs + 1] = msg
     end
 
-    M.append_data(msgs, {
+    Debugging.append_data(msgs, {
         header = { "Messages", "" },
         footer = true
     })
 end
 
-return M
+return Debugging

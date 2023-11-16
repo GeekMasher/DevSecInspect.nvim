@@ -12,12 +12,13 @@ function M.setup(opts)
     cnf.setup(opts or {})
 
     -- setup ui and tools
-    ui.setup(cnf.config.panel)
+    ui.setup(cnf.config)
     tools.setup({
         tools = cnf.config.tools
     })
+
     -- refresh ui
-    ui.refresh()
+    ui.render()
 
     -- setup autocmd
     local group = vim.api.nvim_create_augroup(cnf.name, { clear = true })

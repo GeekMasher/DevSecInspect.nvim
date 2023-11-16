@@ -6,6 +6,7 @@ local utils = require("devsecinspect.utils")
 local config = require("devsecinspect.config")
 
 local M = {}
+M.running = false
 
 --- Selected tools
 --- @type table
@@ -92,7 +93,10 @@ function M.setup(opts)
         end
 
         local selected_tool = M.tools[tool_name]
-        selected_tool.status = false
+
+        selected_tool.status = false    -- tool is ready to run
+        selected_tool.running = false   -- tool is running
+        selected_tool.available = false -- tool is available for current file
 
         utils.debug("Setting up and checking: " .. tool_name)
 
@@ -107,11 +111,15 @@ function M.setup(opts)
             selected_tool.status = selected_tool.tool.check()
         end
 
+        -- update tool
+        M.tools[tool_name] = selected_tool
+
         -- append to panel
         panel.append_tool(selected_tool)
 
         ::continue::
     end
+
 
     ui.refresh()
 end
@@ -125,6 +133,12 @@ function M.install()
 end
 
 function M.analyse(bufnr, filepath, opts)
+    if M.running == true then
+        utils.debug("analyse is already running, skipping")
+        return
+    end
+    M.running = true
+
     bufnr = bufnr or vim.api.nvim_get_current_buf()
     filepath = filepath or vim.fn.expand("%:p")
     opts = opts or {}
@@ -135,18 +149,24 @@ function M.analyse(bufnr, filepath, opts)
     end
 
     -- reset diagnostics
-    alerts.reset(bufnr)
+    alerts.clear()
+    ui.clear(bufnr)
 
     -- set state for alerts
     alerts.bufnr = bufnr
 
     for tool_name, _ in pairs(cnf.config.tools) do
         local tool = M.tools[tool_name]
-        tool.running = false
 
         -- check status
         if tool.status == false then
             utils.error("Tool status failed: " .. tool_name)
+            goto continue
+        end
+
+        -- check if tool is running
+        if tool.running == true then
+            utils.warning("Tool is already running: " .. tool_name)
             goto continue
         end
 
@@ -156,30 +176,44 @@ function M.analyse(bufnr, filepath, opts)
 
         -- language check
         if languages and utils.match_language(bufnr, languages) == true then
+            M.tools[tool_name].available = true
+
             if tool.tool.run ~= nil then
                 utils.info("Running tool: " .. tool_name)
-                tool.running = true
+                M.tools[tool_name].running = true
+
+                ui.render()
 
                 tool.tool.run(bufnr, filepath)
+                M.tools[tool_name].running = false
+                ui.render()
             else
                 utils.error("Tool cannot be run: " .. tool_name)
             end
             -- glob check
         elseif globs and utils.match_globs(filepath, globs) then
+            M.tools[tool_name].available = true
+
             if tool.tool.run ~= nil then
                 utils.info("Running tool: " .. tool_name)
-                tool.running = true
+                M.tools[tool_name].running = true
+
+                ui.render()
 
                 tool.tool.run(bufnr, filepath)
+
+                M.tools[tool_name].running = false
+                ui.render()
             else
-                utils.error("Tool cannot be run: " .. tool_name)
+                utils.debug("Tool cannot be run: " .. tool_name)
             end
         end
 
         ::continue::
     end
 
-    ui.refresh(filepath)
+    M.running = false
+    ui.render()
 end
 
 function M.run(bufnr, filepath)

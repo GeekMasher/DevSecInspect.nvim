@@ -21,6 +21,9 @@ M.cwes = {
 ---@param cwe any
 ---@return string
 function M.get_cwe(cwe)
+    if not M.cwes[cwe] then
+        return "Unknown - " .. cwe
+    end
     return M.cwes[cwe]
 end
 

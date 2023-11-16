@@ -49,14 +49,16 @@ function M.process(filepath, opts)
 
     -- TODO(geekmasher): multiple runs
     local sarif_results = sarif.runs[1].results
+
+    local rules = sarif.runs[1].tool.driver.rules
+
     utils.debug("Found " .. #sarif_results .. " results")
 
     for i, result in ipairs(sarif_results) do
         local message = result.message.text
-        local rule = result.ruleId
-        local severity = result.level
+        local rule_id = result.ruleId
 
-        utils.debug("Processing alert: " .. rule)
+        utils.debug("Processing alert: " .. rule_id)
 
         if result.codeFlows == nil then
             local location = result.locations[1].physicalLocation
@@ -64,16 +66,19 @@ function M.process(filepath, opts)
             local column = location.region.startColumn
             local path = location.artifactLocation.uri
 
+            local rule = M.lookup_rule(rules, rule_id)
+
             local alert = {
-                name = rule,
+                name = rule_id,
                 message = message,
-                severity = severity,
                 location = {
                     file = path,
                     -- sarif is 1-indexed, vim is 0-indexed
                     line = line - 1,
                     column = column,
                 },
+                severity = M.find_severity(rule),
+                precision = rule.properties and rule.properties.precision or nil,
             }
 
 
@@ -87,6 +92,35 @@ function M.process(filepath, opts)
     end
 
     return results
+end
+
+function M.lookup_rule(rules, rule_id)
+    for _, rule in ipairs(rules) do
+        if rule.id == rule_id then
+            return rule
+        end
+    end
+    return {}
+end
+
+--- Find the severity of a rule
+---@param rule table
+---@return string
+function M.find_severity(rule)
+    if not rule.defaultConfiguration then
+        return "info"
+    end
+
+    local severity = rule.defaultConfiguration.severity
+    if severity == "error" then
+        return "high"
+    elseif severity == "warning" then
+        return "medium"
+    elseif severity == "note" then
+        return "info"
+    else
+        return "info"
+    end
 end
 
 return M

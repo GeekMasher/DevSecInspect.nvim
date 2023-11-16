@@ -8,9 +8,7 @@ function M.debug(msg, opts)
     local panel = require("devsecinspect.ui.panel")
 
     opts = opts or {}
-    if config.debug == true then
-        panel.messages[#panel.messages + 1] = "[" .. config.symbols.debug .. "] " .. msg
-    end
+    panel.messages[#panel.messages + 1] = "[" .. config.symbols.debug .. "] " .. msg
 end
 
 --- Info function
@@ -180,6 +178,23 @@ function M.contains(str, data)
         end
     end
     return false
+end
+
+--- Create a markdown table
+---@param header table
+---@param data table
+---@return table
+function M.create_markdown_table(header, data)
+    local lines = {}
+    -- header
+    table.insert(lines, "| " .. table.concat(header, " | ") .. " |")
+
+    -- table content
+    for _, v in pairs(data) do
+        table.insert(lines, "| " .. table.concat(v, " | ") .. " |")
+    end
+
+    return lines
 end
 
 return M

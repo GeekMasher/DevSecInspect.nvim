@@ -6,7 +6,9 @@ local alerts     = require("devsecinspect.alerts")
 
 local M          = {}
 M.languages      = {
-    "python"
+    "python",
+    "javascript",
+    "typescript",
 }
 M.config         = {}
 
@@ -22,7 +24,7 @@ function M.setup(opts)
         },
         -- semgrep config
         rules = {
-            config = "auto",
+            config = "p/default",
         },
     }
     M.config = utils.table_merge(default, opts or {})

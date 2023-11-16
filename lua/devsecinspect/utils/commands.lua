@@ -56,7 +56,7 @@ function CMD.run(command, args, callback, opts)
                 end
 
                 callback(data)
-                ui.refresh()
+                ui.render()
             end
         })
     end
