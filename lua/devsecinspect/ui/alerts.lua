@@ -14,6 +14,8 @@ AlertsUi.config = {}
 AlertsUi.panel = nil
 -- table of alerts to display
 AlertsUi.alerts = {}
+-- diagnostics
+AlertsUi.diagnostics = {}
 
 
 function AlertsUi.setup(opts)
@@ -90,17 +92,36 @@ function AlertsUi.close()
     end
 end
 
+function AlertsUi.toggle()
+    if AlertsUi.panel then
+        if AlertsUi.panel.mounted == true then
+            AlertsUi.close()
+        else
+            AlertsUi.open()
+        end
+    end
+end
+
 --- Clear the panel
 function AlertsUi.clear(bufnr)
+    bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+    AlertsUi.clear_diagnostics(bufnr)
+
+    if AlertsUi.panel and AlertsUi.panel.bufnr then
+        vim.api.nvim_buf_set_lines(AlertsUi.panel.bufnr, 0, -1, true, {})
+    end
+end
+
+--- Clear the diagnostics
+---@param bufnr integer
+function AlertsUi.clear_diagnostics(bufnr)
     bufnr = bufnr or vim.api.nvim_get_current_buf()
 
     local ns = vim.api.nvim_create_namespace("devsecinspect_alerts")
     vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
     vim.diagnostic.reset(ns, bufnr)
-
-    if AlertsUi.panel and AlertsUi.panel.bufnr then
-        vim.api.nvim_buf_set_lines(AlertsUi.panel.bufnr, 0, -1, true, {})
-    end
+    AlertsUi.diagnostics = {}
 end
 
 function AlertsUi.on_resize()
@@ -149,10 +170,10 @@ function AlertsUi.append_data(data, opts)
             elseif type(opts.header) == "boolean" then
                 opts.header = { "" }
             end
-            utils.table_extend(result, opts.header)
+            result = utils.table_extend(result, opts.header)
         end
         -- append data
-        AlertsUi.data = utils.table_extend(result, data)
+        result = utils.table_extend(result, data)
 
         if opts.footer then
             if type(opts.footer) == "string" then
@@ -160,7 +181,7 @@ function AlertsUi.append_data(data, opts)
             elseif type(opts.footer) == "boolean" then
                 opts.footer = { "" }
             end
-            utils.table_extend(result, opts.footer)
+            result = utils.table_extend(result, opts.footer)
         end
 
         vim.api.nvim_buf_set_lines(AlertsUi.panel.bufnr, 0, -1, true, result)
@@ -171,6 +192,7 @@ end
 ---@param bufnr integer | nil
 function AlertsUi.render(bufnr)
     bufnr = bufnr or vim.api.nvim_get_current_buf()
+    local ns = vim.api.nvim_create_namespace("devsecinspect_alerts")
 
     AlertsUi.clear(bufnr)
 
@@ -195,14 +217,14 @@ function AlertsUi.render(bufnr)
         AlertsUi.open()
     end
 
-    -- render in in-line diagnostics
-    if AlertsUi.config.mode ~= nil and AlertsUi.config.mode == "summarised" then
-        AlertsUi.render_summarised(bufnr, alerts.results)
-    elseif AlertsUi.config.mode ~= nil and AlertsUi.config.mode == "full" then
-        AlertsUi.render_diagnostic(bufnr, alerts.results)
-    else
-        utils.error("ui.alerts.render: Invalid mode")
-    end
+    -- Render in in-line diagnostics
+    -- Summary
+    AlertsUi.render_summarised(bufnr, alerts.results)
+    -- or; full diagnostic
+    AlertsUi.render_diagnostic(bufnr, alerts.results)
+
+    -- Set all Diagnostics
+    vim.diagnostic.set(ns, bufnr, AlertsUi.diagnostics)
 
     -- alerts
     if AlertsUi.panel ~= nil and AlertsUi.config.panel.enabled == true then
@@ -279,7 +301,7 @@ function AlertsUi.render_tools(tools)
     local available_tools = {}
 
     for _, tool in pairs(tools) do
-        local status = tool.running and AlertsUi.config.symbols.enabled or AlertsUi.config.symbols.disabled
+        local status = tool.status and AlertsUi.config.symbols.enabled or AlertsUi.config.symbols.disabled
 
         if tool.status == true then
             local msg = " -> " .. status .. " " .. tool.name .. " (" .. tool.type .. ")"
@@ -292,8 +314,6 @@ function AlertsUi.render_tools(tools)
         end
     end
 
-
-    -- add empty line
     AlertsUi.append_data(available_tools, {
         header = { "Tools", "" },
         footer = true
@@ -304,37 +324,110 @@ end
 ---@param bufnr integer
 ---@param alerts table
 function AlertsUi.render_summarised(bufnr, alerts)
+    AlertsUi.clear_diagnostics(bufnr)
+
+    local ns = vim.api.nvim_create_namespace("devsecinspect_alerts")
+
+    local total_summary = {
+        critical = 0,
+        high = 0,
+        medium = 0,
+        low = 0,
+        info = 0,
+        debug = 0,
+    }
+
+    -- { [number] = { high = 0 } }
+    local line_summaries = {}
+
+    for _, instances in pairs(alerts) do
+        for _, alert in pairs(instances) do
+            if AlertsUi.filter_alert(alert) then
+                -- add one to the total summary
+                total_summary[alert.severity] = total_summary[alert.severity] + 1
+
+                -- TODO(geekmasher)
+                if line_summaries[alert.location.line] == nil then
+                    line_summaries[alert.location.line] = {
+                        critical = 0,
+                        high = 0,
+                        medium = 0,
+                        low = 0,
+                        info = 0,
+                        debug = 0,
+                    }
+                end
+
+                line_summaries[alert.location.line][alert.severity] = line_summaries[alert.location.line]
+                    [alert.severity] + 1
+            end
+        end
+    end
+
+    if AlertsUi.config.mode ~= nil and AlertsUi.config.mode == "summarised" then
+        AlertsUi.show_summary_diagnostics(bufnr, line_summaries)
+    end
+
+    local render_summary = {
+        "Alert Summary", "",
+        " > Critical: " .. total_summary.critical,
+        " > High: " .. total_summary.high,
+        " > Medium: " .. total_summary.medium,
+        " > Low: " .. total_summary.low,
+        " > Info: " .. total_summary.info,
+        " > Debug: " .. total_summary.debug,
+    }
+
+    AlertsUi.append_data(render_summary, { header = true })
 end
 
 --- Display the diagnostic information for an alert
 ---@param bufnr integer
 ---@param alerts table
 function AlertsUi.render_diagnostic(bufnr, alerts)
-    AlertsUi.clear(bufnr)
+    AlertsUi.clear_diagnostics(bufnr)
 
     for _, instances in pairs(alerts) do
         for _, alert in pairs(instances) do
             if AlertsUi.filter_alert(alert) then
-                AlertsUi.show_diagnostic(bufnr, alert)
+                if AlertsUi.config.mode ~= nil and AlertsUi.config.mode == "full" then
+                    AlertsUi.show_alert_diagnostic(bufnr, alert)
+                end
+
+                local severity = alert:get_severity_level()
+
+                -- https://neovim.io/doc/user/diagnostic.html#vim.diagnostic.set()
+                AlertsUi.diagnostics[#AlertsUi.diagnostics + 1] = {
+                    bufnr = bufnr,
+                    lnum = alert.location.line,
+                    col = alert.location.column or 0,
+                    end_col = alert.location.column_end or 0,
+                    severity = severity,
+                    message = alert.name,
+                }
             end
         end
     end
 end
 
-function AlertsUi.show_diagnostic(bufnr, alert)
+--- Display inline diagnostic information for an alert
+---@param bufnr integer
+---@param alert table
+function AlertsUi.show_alert_diagnostic(bufnr, alert)
     local ns = vim.api.nvim_create_namespace("devsecinspect_alerts")
 
     local location = alert.location or {}
     local text = AlertsUi.find_severity_symbol(alert.severity) .. " " .. alert.name
 
-    local existing = vim.api.nvim_buf_get_extmarks(
-        bufnr, ns, { location.line, 0 }, { location.line, -1 }, {}
-    )
+    -- TODO(geekmasher): do we need to check for existing marks?
+    -- local existing = vim.api.nvim_buf_get_extmarks(
+    --     bufnr, ns, { location.line, 0 }, { location.line, -1 }, {}
+    -- )
+    -- if existing and #existing > 0 then
+    --     return
+    -- end
 
-    if existing and #existing > 0 then
-        return
-    end
-
+    -- check to see if the full mode is enabled
     vim.api.nvim_buf_set_extmark(
         bufnr, ns, location.line, 0,
         {
@@ -344,6 +437,42 @@ function AlertsUi.show_diagnostic(bufnr, alert)
             virt_text = { { text } }
         }
     )
+end
+
+--- Show the summary diagnostic information
+---@param bufnr integer
+---@param summaries table
+function AlertsUi.show_summary_diagnostics(bufnr, summaries)
+    for line, summary in pairs(summaries) do
+        AlertsUi.show_summary_diagnostic(bufnr, line, summary)
+    end
+end
+
+--- Show a Summary of the diagnostic information
+---@param bufnr integer
+---@param line integer
+---@param summary table
+function AlertsUi.show_summary_diagnostic(bufnr, line, summary)
+    local ns = vim.api.nvim_create_namespace("devsecinspect_alerts")
+
+    for severity, count in pairs(summary) do
+        if count == 0 then
+            goto continue
+        end
+        local severity_symbol = AlertsUi.find_severity_symbol(severity)
+
+        local text = severity_symbol .. " " .. count .. " " .. severity .. " alerts"
+        vim.api.nvim_buf_set_extmark(
+            bufnr, ns, line, 0,
+            {
+                hl_mode = "replace",
+                hl_group = "Alert",
+                virt_text_pos = AlertsUi.config.text_position,
+                virt_text = { { text } }
+            }
+        )
+        ::continue::
+    end
 end
 
 return AlertsUi

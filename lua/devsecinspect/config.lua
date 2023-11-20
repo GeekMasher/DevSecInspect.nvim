@@ -24,12 +24,13 @@ function M.setup(opts)
         -- Alerts Display and Panel settings
         alerts = {
             -- Mode to display alerts
-            mode = "summarised", -- "summarised" or "full"
-            auto_open = false,   -- automatically open the panel
-            auto_close = false,  -- automatically close the panel
-            auto_preview = true, -- automatically preview alerts in the main buffer
+            mode = "summarised",   -- "summarised" or "full"
+            auto_open = false,     -- automatically open the panel
+            auto_close = false,    -- automatically close the panel
+            auto_preview = true,   -- automatically preview alerts in the main buffer
+            text_position = "eol", -- "eol" / "overlay" / "right_align" / "inline"
             panel = {
-                enabled = false, -- always show the panel
+                enabled = false,   -- always show the panel
                 -- Panel position and size
                 position = {
                     row = "0%",

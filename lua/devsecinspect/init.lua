@@ -39,7 +39,9 @@ function M.setup(opts)
             group = group,
             callback = function()
                 vim.schedule(function()
-                    tools.analyse()
+                    local bufnr = vim.api.nvim_get_current_buf()
+                    local filepath = vim.api.nvim_buf_get_name(bufnr)
+                    tools.analyse(bufnr, filepath)
                 end)
             end
         })
@@ -50,7 +52,10 @@ function M.setup(opts)
                 vim.schedule(function()
                     -- Clear alerts and re-run analysis
                     alerts.reset()
-                    tools.analyse()
+
+                    local bufnr = vim.api.nvim_get_current_buf()
+                    local filepath = vim.api.nvim_buf_get_name(bufnr)
+                    tools.analyse(bufnr, filepath)
                 end)
             end
         })
@@ -58,10 +63,22 @@ function M.setup(opts)
 
     -- Commands
     vim.api.nvim_create_user_command("DSI", function()
-        tools.analyse()
+        -- toggle ui
+        ui.toggle()
+
+        local bufnr = vim.api.nvim_get_current_buf()
+        local filepath = vim.api.nvim_buf_get_name(bufnr)
+        tools.analyse(bufnr, filepath)
     end, {})
+
     vim.api.nvim_create_user_command("DSIInstall", function()
         ui.open("tools")
+    end, {})
+
+    vim.api.nvim_create_user_command("DSIFix", function()
+        local bufnr = vim.api.nvim_get_current_buf()
+        local filepath = vim.api.nvim_buf_get_name(bufnr)
+        tools.fix(bufnr, filepath)
     end, {})
 end
 

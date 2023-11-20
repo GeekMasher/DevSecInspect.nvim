@@ -25,10 +25,20 @@ function M.check_results(tool)
     return true
 end
 
---- Add Alerts to the alerts table
+--- Add Alert to the alerts table
 ---@param alert table
-function M.add_alert(tool, alert)
-    M.append(tool, alert)
+function M.add_alert(alert)
+    if alert == nil then
+        utils.error("Alert is required")
+        return
+    end
+
+    if not M.results[alert.category] then
+        M.results[alert.category] = {}
+    end
+
+    local instance = alert:get_instance()
+    M.results[alert.category][instance] = alert
 end
 
 --- Add an alert to the alerts table

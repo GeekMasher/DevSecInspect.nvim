@@ -132,23 +132,34 @@ function M.install()
 
 end
 
+--- Analyse file
+---@param bufnr number
+---@param filepath string
+---@param opts table | nil
 function M.analyse(bufnr, filepath, opts)
     if M.running == true then
         utils.debug("analyse is already running, skipping")
         return
     end
-    M.running = true
 
     bufnr = bufnr or vim.api.nvim_get_current_buf()
-    filepath = filepath or vim.fn.expand("%:p")
+    filepath = filepath or vim.api.nvim_buf_get_name(bufnr)
     opts = opts or {}
 
     -- skip if buftype is not a file
     if vim.api.nvim_buf_get_option(bufnr, "buftype") ~= "" then
         return
+    elseif filepath == nil or filepath == "" then
+        return
     end
 
+    M.running = true
+
+    local filename = vim.fn.fnamemodify(filepath, ":t")
+    utils.info("Analysing file: " .. filename, { show = true })
+
     -- reset diagnostics
+    -- TODO(geekmasher): what about multi-file analysis?
     alerts.clear()
     ui.clear(bufnr)
 
@@ -179,7 +190,7 @@ function M.analyse(bufnr, filepath, opts)
             M.tools[tool_name].available = true
 
             if tool.tool.run ~= nil then
-                utils.info("Running tool: " .. tool_name)
+                utils.debug("Running tool: " .. tool_name, { show = true })
                 M.tools[tool_name].running = true
 
                 ui.render()
@@ -220,12 +231,51 @@ function M.run(bufnr, filepath)
 
 end
 
+--- Fix security alert if possible
+---@param bufnr integer
+---@param filepath string
+function M.fix(bufnr, filepath, opts)
+    bufnr = bufnr or vim.api.nvim_get_current_buf()
+    filepath = filepath or vim.fn.expand("%:p")
+    opts = opts or {}
+
+    for tool_name, _ in pairs(cnf.config.tools) do
+        local tool = M.tools[tool_name]
+
+        -- globs and languages from tool or config
+        local globs = tool.tool.globs or tool.tool.config.globs
+        local languages = tool.tool.languages or tool.tool.config.languages
+
+        -- language check
+        if languages and utils.match_language(bufnr, languages) == true then
+            M.tools[tool_name].available = true
+
+            if tool.tool.fix ~= nil then
+                utils.info("Fixing tool: " .. tool_name)
+                tool.tool.fix(bufnr, filepath)
+            else
+                utils.error("Tool cannot be fixed: " .. tool_name)
+            end
+        elseif globs and utils.match_globs(filepath, globs) then
+            M.tools[tool_name].available = true
+
+            if tool.tool.fix ~= nil then
+                utils.info("Fixing tool: " .. tool_name)
+                tool.tool.fix(bufnr, filepath)
+            else
+                utils.error("Tool cannot be fixed: " .. tool_name)
+            end
+        end
+    end
+end
+
 --- Autofix security alert if possible
 ---@param bufnr integer
 ---@param filepath string
-function M.autofix(bufnr, filepath)
+function M.autofix(bufnr, filepath, opts)
     bufnr = bufnr or vim.api.nvim_get_current_buf()
     filepath = filepath or vim.fn.expand("%:p")
+    opts = opts or {}
 
     -- check config
     if cnf.config.autofix ~= nil and cnf.config.autofix.enabled == false then

@@ -5,6 +5,9 @@ local sarif      = require("devsecinspect.utils.sarif")
 local alerts     = require("devsecinspect.alerts")
 
 local M          = {}
+-- Languages supported by semgrep
+-- https://semgrep.dev/docs/supported-languages/#language-maturity
+---@type table
 M.languages      = {
     "python",
     "javascript",
@@ -70,7 +73,7 @@ function M.run_cli(bufnr, filepath)
 
         -- post-sarif processing for semgrep
         -- IDs/Names are not unique, so we need them filter some out
-        for i, result in ipairs(pre_results) do
+        for _, result in ipairs(pre_results) do
             -- simplify the name of the alert
             local split_name = utils.split(result.name, ".")
             result.name = M.find_alias(split_name[#split_name])

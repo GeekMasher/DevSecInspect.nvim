@@ -3,6 +3,7 @@
 -- Based on the work from pwntegeek/codeql.nvim
 -- https://github.com/pwntester/codeql.nvim/blob/master/lua/codeql/sarif.lua
 
+local Alert = require("devsecinspect.alerts.alert")
 local utils = require("devsecinspect.utils")
 local config = require("devsecinspect.config").config
 local ui = require("devsecinspect.ui")
@@ -38,11 +39,12 @@ function M.process(filepath, opts)
     -- sarif file data
     local sarif = M.load(filepath, opts)
 
-    if sarif == nil and type(sarif) == "table" then
+    if sarif == nil or type(sarif) ~= "table" then
         utils.warning("Failed to parse sarif file")
         return nil
     end
 
+    local tool = opts.tool or "devsecinspect"
     local results = {}
 
     utils.debug("Processing sarif file: " .. filepath)
@@ -68,19 +70,19 @@ function M.process(filepath, opts)
 
             local rule = M.lookup_rule(rules, rule_id)
 
-            local alert = {
-                name = rule_id,
-                message = message,
-                location = {
-                    file = path,
-                    -- sarif is 1-indexed, vim is 0-indexed
-                    line = line - 1,
-                    column = column,
-                },
-                severity = M.find_severity(rule),
-                precision = rule.properties and rule.properties.precision or nil,
+            local alert_location = {
+                file = path,
+                line = line - 1,
+                column = column,
             }
 
+            local alert = Alert:new(tool, rule_id, alert_location, {
+                severity = M.find_severity(rule),
+                message = message,
+                references = {
+                    rule.helpUri
+                }
+            })
 
             table.insert(results, alert)
         else

@@ -1,3 +1,4 @@
+local Alert    = require("devsecinspect.alerts.alert")
 local alerts   = require("devsecinspect.alerts")
 local utils    = require("devsecinspect.utils")
 local commands = require("devsecinspect.utils.commands")
@@ -26,7 +27,7 @@ function M.check()
     return commands.check({ M.config.path, "audit", "--help" })
 end
 
---- Run cargo-audit
+--- Run npm-audit
 ---@param bufnr integer
 ---@param filepath string
 function M.run(bufnr, filepath)
@@ -47,21 +48,32 @@ function M.run(bufnr, filepath)
         table.insert(params, M.config.level)
     end
 
+    -- TODO(geekmasher): do we need to run `npm install` before running `npm audit`?
+
     commands.run(M.config.path, params, function(data)
         local json_data = vim.fn.json_decode(data)
 
         if json_data.vulnerabilities then
+            -- generate list of locations of dependencies
+            local locations = M.locations(bufnr, filepath)
+
             for dep_name, vulnerability in pairs(json_data.vulnerabilities) do
-                local location = M.find_location(bufnr, dep_name)
+                local location = locations[dep_name]
+
+                if location == nil then
+                    location = { line = 0, column = 0, file = filepath }
+                end
 
                 for _, vuln_via in ipairs(vulnerability.via) do
-                    alerts.append("npm-audit", {
-                        name = vuln_via.title,
-                        location = location or {},
+                    local alert = Alert:new("npm-audit", vuln_via.title, location, {
                         severity = vuln_via.severity,
-                        message = vuln_via.title .. " - " .. vuln_via.url,
-                        reference = {}
+                        message = vuln_via.title,
+                        references = {
+                            vuln_via.url
+                        }
                     })
+
+                    alerts.add_alert(alert)
                 end
             end
         else
@@ -70,18 +82,49 @@ function M.run(bufnr, filepath)
     end)
 end
 
-function M.find_location(bufnr, dep_name)
+--- Find locations of dependencies in the buffer
+---@param bufnr integer
+---@param filepath string
+---@return table
+function M.locations(bufnr, filepath)
     -- find location of dependencies in the buffer
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local in_deps = false
 
-    for line_number, line_content in ipairs(lines) do
-        if string.match(line_content, "^.*\"" .. dep_name .. "\":") then
-            return {
+    local results = {}
+
+    for line_number, content in ipairs(lines) do
+        if string.match(content, "[\"|\']dependencies[\"|\']:") then
+            in_deps = true
+        elseif in_deps == true and string.match(content, "^.*},?") then
+            in_deps = false
+        elseif in_deps == true then
+            local dep = string.match(content, "[\"|\'](.*)[\"|\']:")
+            local first_quote = string.find(content, "[\"|\']") or 0
+
+            results[dep] = {
                 line = line_number - 1,
+                column = first_quote,
+                column_end = #content,
+                file = filepath,
+                filename = vim.fn.fnamemodify(filepath, ":t")
             }
         end
     end
-    return {}
+
+    return results
+end
+
+function M.fix(bufnr, filepath)
+    commands.run(M.config.path, { "audit", "fix", "--force" }, function(data)
+        utils.info("Auto-fixing npm audit vulnerabilities", { show = true })
+        -- reload buffer
+        vim.api.nvim_command("edit")
+
+        -- run audit again
+        local tools = require("devsecinspect.tools")
+        tools.analyse(bufnr, filepath)
+    end)
 end
 
 return M

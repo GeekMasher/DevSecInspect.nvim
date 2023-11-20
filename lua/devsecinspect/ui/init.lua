@@ -40,6 +40,10 @@ function M.on_resize()
     tools_panel.on_resize()
 end
 
+function M.toggle()
+    alerts_panel.toggle()
+end
+
 --- Refresh the UI
 ---@param bufnr integer | nil
 ---@param filepath string | nil

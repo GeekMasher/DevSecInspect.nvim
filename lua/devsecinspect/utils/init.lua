@@ -20,6 +20,9 @@ function M.info(msg, opts)
 
     opts = opts or {}
     panel.messages[#panel.messages + 1] = "[" .. config.symbols.info .. "] " .. msg
+    if opts.show then
+        vim.api.nvim_out_write(msg .. "\n")
+    end
 end
 
 function M.warning(msg, opts)
