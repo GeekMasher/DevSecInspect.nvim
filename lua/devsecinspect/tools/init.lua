@@ -218,6 +218,20 @@ function M.analyse(bufnr, filepath, opts)
             else
                 utils.debug("Tool cannot be run: " .. tool_name)
             end
+        elseif tool.type == "service" then
+            -- if the tool is a service always run it
+            -- this is because the service will check the file
+            if tool.tool.run ~= nil then
+                utils.info("Running tool: " .. tool_name)
+                M.tools[tool_name].running = true
+
+                ui.render()
+
+                tool.tool.run(bufnr, filepath)
+
+                M.tools[tool_name].running = false
+                ui.render()
+            end
         end
 
         ::continue::

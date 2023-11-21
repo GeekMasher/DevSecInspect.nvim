@@ -14,11 +14,11 @@ function Alert:new(tool, name, location, opts)
 
     -- validation
     if tool == nil or name == nil or location == nil then
-        utils.error("Tool, name, location, and severity is required")
+        utils.error("Tool, name, and location are required")
         return {}
     end
-    if not location.line then
-        utils.error("Alert missing required `location.line` field")
+    if not location.file or not location.line then
+        utils.error("Alert missing required `location.file` or `location.line` field")
         return {}
     end
 
@@ -41,13 +41,18 @@ function Alert:new(tool, name, location, opts)
     alert.paths = opts.paths or {}
     alert.references = opts.references or {}
 
+    -- if multiple locations are provided, add them to the alert
+    alert.locations = opts.locations or {}
+
     return alert
 end
 
 --- Get instance of the alert
 ---@return string
 function Alert:get_instance()
-    if self.location.column then
+    if self.location.filename == nil then
+        return self.location.file .. "#" .. self.location.line
+    elseif self.location.column then
         return self.location.filename .. "#" .. self.location.line .. "#" .. self.location.column
     else
         return self.location.filename .. "#" .. self.location.line

@@ -1,6 +1,7 @@
 local Alert    = require("devsecinspect.alerts.alert")
 local alerts   = require("devsecinspect.alerts")
 local utils    = require("devsecinspect.utils")
+local Packages = require("devsecinspect.utils.packages")
 local commands = require("devsecinspect.utils.commands")
 
 local M        = {}
@@ -54,11 +55,12 @@ function M.run(bufnr, filepath)
         local json_data = vim.fn.json_decode(data)
 
         if json_data.vulnerabilities then
-            -- generate list of locations of dependencies
-            local locations = M.locations(bufnr, filepath)
+            -- generate list of locations of dependencies for known package managers
+            local packages = Packages:new(filepath)
+            packages:load(bufnr, filepath)
 
             for dep_name, vulnerability in pairs(json_data.vulnerabilities) do
-                local location = locations[dep_name]
+                local location = packages:find(dep_name)
 
                 if location == nil then
                     location = { line = 0, column = 0, file = filepath }
@@ -80,39 +82,6 @@ function M.run(bufnr, filepath)
             utils.debug("No vulnerabilities found")
         end
     end)
-end
-
---- Find locations of dependencies in the buffer
----@param bufnr integer
----@param filepath string
----@return table
-function M.locations(bufnr, filepath)
-    -- find location of dependencies in the buffer
-    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    local in_deps = false
-
-    local results = {}
-
-    for line_number, content in ipairs(lines) do
-        if string.match(content, "[\"|\']dependencies[\"|\']:") then
-            in_deps = true
-        elseif in_deps == true and string.match(content, "^.*},?") then
-            in_deps = false
-        elseif in_deps == true then
-            local dep = string.match(content, "[\"|\'](.*)[\"|\']:")
-            local first_quote = string.find(content, "[\"|\']") or 0
-
-            results[dep] = {
-                line = line_number - 1,
-                column = first_quote,
-                column_end = #content,
-                file = filepath,
-                filename = vim.fn.fnamemodify(filepath, ":t")
-            }
-        end
-    end
-
-    return results
 end
 
 function M.fix(bufnr, filepath)
