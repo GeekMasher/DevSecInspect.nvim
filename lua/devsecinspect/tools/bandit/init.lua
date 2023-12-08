@@ -33,6 +33,7 @@ function M.run(bufnr, filepath)
         if json_data.results then
             for _, vulnerability in ipairs(json_data.results) do
                 local location = {
+                    file = filepath,
                     line = vulnerability.line_number - 1,
                 }
 
