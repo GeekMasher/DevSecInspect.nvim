@@ -45,6 +45,12 @@ M.tools = {
         type = "sast",
         tool = require("devsecinspect.tools.semgrep.oss"),
     },
+    quibble = {
+        name = "Quibble",
+        author = "GeekMasher",
+        type = "sast",
+        tool = require("devsecinspect.tools.quibble"),
+    },
     -- Services
     github = {
         name = "GitHub Advanced Security",
@@ -156,7 +162,7 @@ function M.analyse(bufnr, filepath, opts)
     M.running = true
 
     local filename = vim.fn.fnamemodify(filepath, ":t")
-    utils.info("Analysing file: " .. filename, { show = true })
+    utils.debug("Analysing file: " .. filename, { show = true })
 
     -- reset diagnostics
     -- TODO(geekmasher): what about multi-file analysis?
