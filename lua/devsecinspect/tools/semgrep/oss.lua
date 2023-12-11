@@ -12,6 +12,11 @@ M.languages      = {
     "python",
     "javascript",
     "typescript",
+    "go",
+    "java",
+    "php",
+    "ruby",
+    "scala",
 }
 M.config         = {}
 
