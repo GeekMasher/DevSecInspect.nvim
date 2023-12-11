@@ -86,7 +86,7 @@ function M.match_globs(filepath, filters)
     end
 
     for _, filter in ipairs(filters) do
-        if string.match(filepath, filter) then
+        if string.find(filepath, filter) then
             return true
         end
     end
