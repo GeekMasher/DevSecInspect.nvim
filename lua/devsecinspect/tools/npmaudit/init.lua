@@ -1,14 +1,14 @@
-local Alert    = require("devsecinspect.alerts.alert")
-local alerts   = require("devsecinspect.alerts")
-local utils    = require("devsecinspect.utils")
-local Packages = require("devsecinspect.utils.packages")
-local commands = require("devsecinspect.utils.commands")
+local Alert = require "devsecinspect.alerts.alert"
+local Packages = require "devsecinspect.utils.packages"
+local alerts = require "devsecinspect.alerts"
+local commands = require "devsecinspect.utils.commands"
+local utils = require "devsecinspect.utils"
 
-local M        = {}
-M.globs        = {
-    "package.json"
+local M = {}
+M.globs = {
+    "package.json",
 }
-M.config       = {}
+M.config = {}
 
 --- Setup cargo-audit
 ---@param opts table
@@ -16,16 +16,16 @@ function M.setup(opts)
     local default = {
         path = "npm",
         globs = {
-            "package.json"
+            "package.json",
         },
         level = "high",
-        omit = "dev"
+        omit = "dev",
     }
     M.config = utils.table_merge(default, opts or {})
 end
 
 function M.check()
-    return commands.check({ M.config.path, "audit", "--help" })
+    return commands.check { M.config.path, "audit", "--help" }
 end
 
 --- Run npm-audit
@@ -33,7 +33,7 @@ end
 ---@param filepath string
 function M.run(bufnr, filepath)
     -- use alerts cache
-    if alerts.check_results("npm-audit") then
+    if alerts.check_results "npm-audit" then
         return
     end
 
@@ -71,15 +71,15 @@ function M.run(bufnr, filepath)
                         severity = vuln_via.severity,
                         message = vuln_via.title,
                         references = {
-                            vuln_via.url
-                        }
+                            vuln_via.url,
+                        },
                     })
 
                     alerts.add_alert(alert)
                 end
             end
         else
-            utils.debug("No vulnerabilities found")
+            utils.debug "No vulnerabilities found"
         end
     end)
 end
@@ -88,10 +88,10 @@ function M.fix(bufnr, filepath)
     commands.run(M.config.path, { "audit", "fix", "--force" }, function(data)
         utils.info("Auto-fixing npm audit vulnerabilities", { show = true })
         -- reload buffer
-        vim.api.nvim_command("edit")
+        vim.api.nvim_command "edit"
 
         -- run audit again
-        local tools = require("devsecinspect.tools")
+        local tools = require "devsecinspect.tools"
         tools.analyse(bufnr, filepath)
     end)
 end

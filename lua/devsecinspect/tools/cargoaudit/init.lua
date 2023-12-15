@@ -1,14 +1,14 @@
-local utils    = require("devsecinspect.utils")
-local commands = require("devsecinspect.utils.commands")
-local alerts   = require("devsecinspect.alerts")
-local config   = require("devsecinspect.config")
-local ui       = require("devsecinspect.ui")
+local alerts = require "devsecinspect.alerts"
+local commands = require "devsecinspect.utils.commands"
+local config = require "devsecinspect.config"
+local ui = require "devsecinspect.ui"
+local utils = require "devsecinspect.utils"
 
-local M        = {}
-M.globs        = {
-    "Cargo.toml"
+local M = {}
+M.globs = {
+    "Cargo.toml",
 }
-M.config       = {}
+M.config = {}
 
 --- Setup cargo-audit
 ---@param opts table
@@ -16,11 +16,11 @@ function M.setup(opts)
     local default = {
         path = "cargo-audit",
         globs = {
-            "Cargo.toml"
+            "Cargo.toml",
         },
         languages = {
-            "rust"
-        }
+            "rust",
+        },
     }
     M.config = utils.table_merge(default, opts or {})
 end
@@ -28,7 +28,7 @@ end
 --- Check if cargo-audit is installed
 ---@return boolean
 function M.check()
-    return commands.check({ M.config.path, "--version" })
+    return commands.check { M.config.path, "--version" }
 end
 
 --- Run cargo-audit
@@ -36,7 +36,7 @@ end
 ---@param filepath string
 function M.run(bufnr, filepath)
     -- use alerts cache
-    if alerts.check_results("cargo-audit") then
+    if alerts.check_results "cargo-audit" then
         return
     end
 
@@ -55,7 +55,7 @@ function M.run(bufnr, filepath)
                     location = location or {},
                     severity = M.check_severity(vulnerability.severity),
                     message = vulnerability.advisory.description,
-                    reference = {}
+                    reference = {},
                 })
             end
         end
@@ -84,7 +84,7 @@ function M.find_top_level(vulnerability, cargo_locations)
 
             if cargo_locations[dep_name] then
                 return {
-                    filepath = vim.fn.expand("%:p"),
+                    filepath = vim.fn.expand "%:p",
                     line = cargo_locations[dep_name].line - 1,
                 }
             else
@@ -93,7 +93,7 @@ function M.find_top_level(vulnerability, cargo_locations)
         end
     end
 
-    return { filepath = vim.fn.expand("%:p"), line = 0 }
+    return { filepath = vim.fn.expand "%:p", line = 0 }
 end
 
 --- Get the locations of the cargo dependencies
@@ -133,7 +133,7 @@ function M.create_locations(bufnr, filepath)
                 locations[dep_name] = {
                     line = line_number,
                     version = dep_version,
-                    text = line_content
+                    text = line_content,
                 }
             end
         end

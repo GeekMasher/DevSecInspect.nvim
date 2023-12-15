@@ -1,4 +1,4 @@
-local utils = require('devsecinspect.utils')
+local utils = require "devsecinspect.utils"
 
 local M = {}
 M.engine = "docker"

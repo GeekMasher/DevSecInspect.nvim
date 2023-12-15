@@ -1,10 +1,10 @@
-local alerts   = require("devsecinspect.alerts")
-local utils    = require("devsecinspect.utils")
-local commands = require("devsecinspect.utils.commands")
+local alerts = require "devsecinspect.alerts"
+local commands = require "devsecinspect.utils.commands"
+local utils = require "devsecinspect.utils"
 
-local M        = {}
-M.languages    = { "python" }
-M.config       = {}
+local M = {}
+M.languages = { "python" }
+M.config = {}
 
 --- Setup cargo-audit
 ---@param opts table
@@ -17,7 +17,7 @@ function M.setup(opts)
 end
 
 function M.check()
-    return commands.check({ M.config.path, "--version" })
+    return commands.check { M.config.path, "--version" }
 end
 
 --- Run cargo-audit
@@ -44,11 +44,11 @@ function M.run(bufnr, filepath)
                     message = vulnerability.issue_text,
                     reference = {
                         id = vulnerability.test_name,
-                    }
+                    },
                 })
             end
         else
-            utils.debug("No vulnerabilities found")
+            utils.debug "No vulnerabilities found"
         end
     end)
 end

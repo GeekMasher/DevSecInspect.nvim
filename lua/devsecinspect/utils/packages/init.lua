@@ -1,4 +1,4 @@
-local PackageJson = require("devsecinspect.utils.packages.packagejson")
+local PackageJson = require "devsecinspect.utils.packages.packagejson"
 
 local Packages = {}
 Packages.__index = Packages
@@ -18,7 +18,7 @@ end
 ---@param filepath any
 ---@return table
 function Packages:load(bufnr, filepath)
-    if filepath:match("package.json") then
+    if filepath:match "package.json" then
         self.locations = PackageJson:locations(bufnr, filepath)
     end
     return {}

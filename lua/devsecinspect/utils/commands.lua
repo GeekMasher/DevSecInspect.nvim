@@ -1,10 +1,9 @@
-local ui = require("devsecinspect.ui")
-local panel = require("devsecinspect.ui.panel")
-local config = require("devsecinspect.config")
-local utils = require("devsecinspect.utils")
+local config = require "devsecinspect.config"
+local panel = require "devsecinspect.ui.panel"
+local ui = require "devsecinspect.ui"
+local utils = require "devsecinspect.utils"
 
 local CMD = {}
-
 
 --- Check if a command exists / works
 ---@param cmd table
@@ -57,7 +56,7 @@ function CMD.run(command, args, callback, opts)
 
                 callback(data)
                 ui.render()
-            end
+            end,
         })
     end
 end
