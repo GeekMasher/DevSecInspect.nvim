@@ -5,7 +5,7 @@ local M = {}
 ---@param opts table | nil
 function M.debug(msg, opts)
     local config = require("devsecinspect.config").config
-    local panel = require("devsecinspect.ui.panel")
+    local panel = require "devsecinspect.ui.panel"
 
     opts = opts or {}
     panel.messages[#panel.messages + 1] = "[" .. config.symbols.debug .. "] " .. msg
@@ -16,7 +16,7 @@ end
 ---@param opts table | nil
 function M.info(msg, opts)
     local config = require("devsecinspect.config").config
-    local panel = require("devsecinspect.ui.panel")
+    local panel = require "devsecinspect.ui.panel"
 
     opts = opts or {}
     panel.messages[#panel.messages + 1] = "[" .. config.symbols.info .. "] " .. msg
@@ -27,7 +27,7 @@ end
 
 function M.warning(msg, opts)
     local config = require("devsecinspect.config").config
-    local panel = require("devsecinspect.ui.panel")
+    local panel = require "devsecinspect.ui.panel"
 
     opts = opts or {}
     panel.messages[#panel.messages + 1] = "[" .. config.symbols.warning .. "] " .. msg
@@ -36,7 +36,7 @@ end
 
 function M.error(msg, opts)
     local config = require("devsecinspect.config").config
-    local panel = require("devsecinspect.ui.panel")
+    local panel = require "devsecinspect.ui.panel"
 
     opts = opts or {}
     panel.messages[#panel.messages + 1] = "[" .. config.symbols.error .. "] " .. msg
@@ -104,7 +104,7 @@ function M.match_language(bufrn, languages)
     if not filetype then
         return false
     elseif #languages == 0 then
-        print("Languages is empty... this shouldn't happen")
+        print "Languages is empty... this shouldn't happen"
         return false
     end
 
@@ -152,7 +152,7 @@ function M.read_file(filepath)
     if not f then
         return nil
     end
-    local content = f:read("*all")
+    local content = f:read "*all"
     f:close()
     return content
 end

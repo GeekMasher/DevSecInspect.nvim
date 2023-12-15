@@ -1,14 +1,14 @@
-local utils      = require("devsecinspect.utils")
-local commands   = require("devsecinspect.utils.commands")
-local containers = require("devsecinspect.utils.containers")
-local sarif      = require("devsecinspect.utils.sarif")
-local alerts     = require("devsecinspect.alerts")
+local alerts = require "devsecinspect.alerts"
+local commands = require "devsecinspect.utils.commands"
+local containers = require "devsecinspect.utils.containers"
+local sarif = require "devsecinspect.utils.sarif"
+local utils = require "devsecinspect.utils"
 
-local M          = {}
+local M = {}
 -- Languages supported by semgrep
 -- https://semgrep.dev/docs/supported-languages/#language-maturity
 ---@type table
-M.languages      = {
+M.languages = {
     "python",
     "javascript",
     "typescript",
@@ -18,7 +18,7 @@ M.languages      = {
     "ruby",
     "scala",
 }
-M.config         = {}
+M.config = {}
 
 function M.setup(opts)
     opts = opts or {}
@@ -44,13 +44,13 @@ function M.check()
     if M.config.container.enabled then
         return containers.check(M.config.setup.image)
     else
-        return commands.check({ M.config.path, "--version" })
+        return commands.check { M.config.path, "--version" }
     end
 end
 
 function M.run(bufnr, filepath)
     if M.config.container.enabled then
-        utils.error("Running semgrep in container isn't currently supported...")
+        utils.error "Running semgrep in container isn't currently supported..."
     else
         M.run_cli(bufnr, filepath)
     end
@@ -60,16 +60,21 @@ function M.run_cli(bufnr, filepath)
     local sarif_file = vim.fn.tempname()
     local rules_config = M.config.rules.config or "auto"
     local args = {
-        "--config", rules_config, "--sarif", "--output", sarif_file, filepath
+        "--config",
+        rules_config,
+        "--sarif",
+        "--output",
+        sarif_file,
+        filepath,
     }
     utils.debug("Running semgrep with args: " .. vim.inspect(args))
 
     commands.run(M.config.path, args, function(data)
-        utils.info("Semgrep has results")
+        utils.info "Semgrep has results"
         -- results from sarif file
         local pre_results = sarif.process(sarif_file, {})
         if not pre_results then
-            utils.error("No results from semgrep")
+            utils.error "No results from semgrep"
             return
         end
 
@@ -108,7 +113,7 @@ end
 -- This is a list of aliases to the correct rule name to help
 -- with deduplication
 M.rule_aliases = {
-    ["sqlalchemy-execute-raw-query"] = "tainted-sql-string"
+    ["sqlalchemy-execute-raw-query"] = "tainted-sql-string",
 }
 --- Find the correct rule name for an alias or return the original name
 ---@param rulealias string

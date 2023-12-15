@@ -1,12 +1,12 @@
-local debugging    = require("devsecinspect.ui.panel")
-local tools_panel  = require("devsecinspect.ui.tools")
-local alerts_panel = require("devsecinspect.ui.alerts")
+local alerts_panel = require "devsecinspect.ui.alerts"
+local debugging = require "devsecinspect.ui.panel"
+local tools_panel = require "devsecinspect.ui.tools"
 
-local alerts       = require("devsecinspect.alerts")
-local cnf          = require("devsecinspect.config")
+local alerts = require "devsecinspect.alerts"
+local cnf = require "devsecinspect.config"
 
-local M            = {}
-M.tools            = {}
+local M = {}
+M.tools = {}
 
 function M.setup(opts)
     opts = opts or {}

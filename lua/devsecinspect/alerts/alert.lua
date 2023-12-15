@@ -1,4 +1,4 @@
-local utils = require("devsecinspect.utils")
+local utils = require "devsecinspect.utils"
 
 local Alert = {}
 Alert.__index = Alert
@@ -14,11 +14,11 @@ function Alert:new(tool, name, location, opts)
 
     -- validation
     if tool == nil or name == nil or location == nil then
-        utils.error("Tool, name, and location are required")
+        utils.error "Tool, name, and location are required"
         return {}
     end
     if not location.file or not location.line then
-        utils.error("Alert missing required `location.file` or `location.line` field")
+        utils.error "Alert missing required `location.file` or `location.line` field"
         return {}
     end
 

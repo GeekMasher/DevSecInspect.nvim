@@ -1,11 +1,11 @@
-local alerts = require("devsecinspect.alerts")
-local utils = require("devsecinspect.utils")
-local commands = require("devsecinspect.utils.commands")
+local alerts = require "devsecinspect.alerts"
+local commands = require "devsecinspect.utils.commands"
+local utils = require "devsecinspect.utils"
 
 local CodeQL = {}
 CodeQL.languages = {
     "javascript",
-    "python"
+    "python",
 }
 CodeQL.config = {}
 
@@ -19,13 +19,13 @@ function CodeQL.setup(opts)
             "javascript",
             "typescript",
             "python",
-        }
+        },
     }
     CodeQL.config = utils.table_merge(default, opts or {})
 end
 
 function CodeQL.check()
-    return commands.check({ CodeQL.config.path, "version", "--format", "terse" })
+    return commands.check { CodeQL.config.path, "version", "--format", "terse" }
 end
 
 --- Run cargo-audit
@@ -46,7 +46,7 @@ function CodeQL.create_database(bufnr, filepath)
         "javascript",
         "--source-root",
         vim.fn.getcwd(),
-        database_path
+        database_path,
     }
     commands.run(CodeQL.config.path, args, function(data)
         print(data)

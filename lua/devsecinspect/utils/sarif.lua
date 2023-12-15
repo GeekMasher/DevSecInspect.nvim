@@ -3,10 +3,10 @@
 -- Based on the work from pwntegeek/codeql.nvim
 -- https://github.com/pwntester/codeql.nvim/blob/master/lua/codeql/sarif.lua
 
-local Alert = require("devsecinspect.alerts.alert")
-local utils = require("devsecinspect.utils")
+local Alert = require "devsecinspect.alerts.alert"
+local utils = require "devsecinspect.utils"
 local config = require("devsecinspect.config").config
-local ui = require("devsecinspect.ui")
+local ui = require "devsecinspect.ui"
 
 local M = {}
 
@@ -40,7 +40,7 @@ function M.process(filepath, opts)
     local sarif = M.load(filepath, opts)
 
     if sarif == nil or type(sarif) ~= "table" then
-        utils.warning("Failed to parse sarif file")
+        utils.warning "Failed to parse sarif file"
         return nil
     end
 
@@ -80,14 +80,14 @@ function M.process(filepath, opts)
                 severity = M.find_severity(rule),
                 message = message,
                 references = {
-                    rule.helpUri
-                }
+                    rule.helpUri,
+                },
             })
 
             table.insert(results, alert)
         else
             -- TODO(geekmasher): data flow
-            utils.error("Data flow not currently supported")
+            utils.error "Data flow not currently supported"
         end
 
         ui.refresh()

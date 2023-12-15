@@ -1,8 +1,7 @@
 -- https://github.com/MunifTanjim/nui.nvim
-local Popup = require("nui.popup")
-local autocmd = require("nui.utils.autocmd")
+local Popup = require "nui.popup"
+local autocmd = require "nui.utils.autocmd"
 local event = autocmd.event
-
 
 local Tools = {}
 Tools.panel = nil
@@ -22,15 +21,15 @@ function Tools.create(name, data, opts)
     local bufnr = vim.api.nvim_get_current_buf()
 
     if Tools.panel == nil then
-        local panel = Popup({
+        local panel = Popup {
             enter = true,
             focusable = true,
             relative = "win",
             border = {
                 style = "rounded",
                 text = {
-                    top = ' ' .. name .. ' '
-                }
+                    top = " " .. name .. " ",
+                },
             },
             position = {
                 row = "30%",
@@ -42,12 +41,12 @@ function Tools.create(name, data, opts)
             },
             buf_options = {
                 modifiable = true,
-                readonly = false
+                readonly = false,
             },
             win_options = {
                 winblend = 10,
-            }
-        })
+            },
+        }
 
         if not opts.persistent then
             autocmd.buf.define(bufnr, event.CursorMoved, function()
@@ -61,14 +60,12 @@ function Tools.create(name, data, opts)
     end
 end
 
-function Tools.on_resize()
-
-end
+function Tools.on_resize() end
 
 --- Open the panel
 function Tools.open()
     if Tools.panel then
-        local panel = require("devsecinspect.ui.panel")
+        local panel = require "devsecinspect.ui.panel"
         if panel.panel then
             Tools.alerts_panel_reopen = true
             panel.close()
@@ -80,7 +77,7 @@ end
 --- Close the panel
 function Tools.close()
     if Tools.panel then
-        local panel = require("devsecinspect.ui.panel")
+        local panel = require "devsecinspect.ui.panel"
         if panel.panel and Tools.alerts_panel_reopen == true then
             Tools.alerts_panel_reopen = false
             panel.open()
@@ -100,18 +97,18 @@ end
 function Tools.on_resize()
     if Tools.panel ~= nil then
         local config = require("devsecinspect.config").config
-        Tools.panel:update_layout({
+        Tools.panel:update_layout {
             size = {
                 width = config.panel.size.width,
                 height = config.panel.size.height,
-            }
-        })
+            },
+        }
     end
 end
 
 function Tools.render(opts)
     opts = opts or {}
-    local tools = require("devsecinspect.tools")
+    local tools = require "devsecinspect.tools"
 end
 
 return Tools

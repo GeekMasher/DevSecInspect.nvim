@@ -1,6 +1,6 @@
-local config = require("devsecinspect.config")
-local utils = require("devsecinspect.utils")
-local Alert = require("devsecinspect.alerts.alert")
+local Alert = require "devsecinspect.alerts.alert"
+local config = require "devsecinspect.config"
+local utils = require "devsecinspect.utils"
 
 local M = {}
 M.bufnr = nil
@@ -16,8 +16,6 @@ M.results = {}
 -- Table of all the unique keys for the results.
 M.result_summaries = {}
 
-
-
 function M.check_results(tool)
     if not M.results[tool] then
         return false
@@ -29,7 +27,7 @@ end
 ---@param alert table
 function M.add_alert(alert)
     if alert == nil then
-        utils.error("Alert is required")
+        utils.error "Alert is required"
         return
     end
 
@@ -46,12 +44,12 @@ end
 ---@param alert table
 function M.append(tool, alert)
     if tool == nil or alert == nil then
-        utils.error("Tool and alert is required")
+        utils.error "Tool and alert is required"
         return
     end
 
     if not alert.name then
-        utils.error("Alert missing required `name` field")
+        utils.error "Alert missing required `name` field"
         return
     end
 
@@ -71,10 +69,10 @@ function M.append(tool, alert)
     -- instance
     local instance = alert.name .. "#" .. alert.location.line
     if not M.results[alt.category][instance] then
-        utils.debug("Adding alert to results table")
+        utils.debug "Adding alert to results table"
         M.results[alt.category][instance] = alert
     else
-        utils.debug("Alert already exists in this instance")
+        utils.debug "Alert already exists in this instance"
     end
 end
 

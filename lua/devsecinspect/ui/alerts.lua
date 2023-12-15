@@ -1,11 +1,10 @@
-local utils = require("devsecinspect.utils")
-local alerts = require("devsecinspect.alerts")
+local alerts = require "devsecinspect.alerts"
+local utils = require "devsecinspect.utils"
 
 -- https://github.com/MunifTanjim/nui.nvim
-local Popup = require("nui.popup")
-local autocmd = require("nui.utils.autocmd")
+local Popup = require "nui.popup"
+local autocmd = require "nui.utils.autocmd"
 local event = autocmd.event
-
 
 local AlertsUi = {}
 -- Panel config
@@ -16,7 +15,6 @@ AlertsUi.panel = nil
 AlertsUi.alerts = {}
 -- diagnostics
 AlertsUi.diagnostics = {}
-
 
 function AlertsUi.setup(opts)
     AlertsUi.config.symbols = opts.symbols
@@ -40,15 +38,15 @@ function AlertsUi.create(name, data, opts)
     local bufnr = vim.api.nvim_get_current_buf()
 
     if AlertsUi.panel == nil then
-        local panel = Popup({
+        local panel = Popup {
             enter = false,
             focusable = true,
             relative = "win",
             border = {
                 style = "rounded",
                 text = {
-                    top = ' ' .. name .. ' ',
-                }
+                    top = " " .. name .. " ",
+                },
             },
             position = {
                 row = AlertsUi.config.panel.position.row or "",
@@ -60,12 +58,12 @@ function AlertsUi.create(name, data, opts)
             },
             buf_options = {
                 modifiable = true,
-                readonly = false
+                readonly = false,
             },
             win_options = {
                 winblend = 10,
-            }
-        })
+            },
+        }
 
         if not opts.persistent then
             autocmd.buf.define(bufnr, event.CursorMoved, function()
@@ -118,7 +116,7 @@ end
 function AlertsUi.clear_diagnostics(bufnr)
     bufnr = bufnr or vim.api.nvim_get_current_buf()
 
-    local ns = vim.api.nvim_create_namespace("devsecinspect_alerts")
+    local ns = vim.api.nvim_create_namespace "devsecinspect_alerts"
     vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
     vim.diagnostic.reset(ns, bufnr)
     AlertsUi.diagnostics = {}
@@ -126,12 +124,12 @@ end
 
 function AlertsUi.on_resize()
     if AlertsUi.panel ~= nil then
-        AlertsUi.panel:update_layout({
+        AlertsUi.panel:update_layout {
             size = {
                 width = AlertsUi.config.panel.size.width,
                 height = AlertsUi.config.panel.size.height,
-            }
-        })
+            },
+        }
     end
 end
 
@@ -192,12 +190,12 @@ end
 ---@param bufnr integer | nil
 function AlertsUi.render(bufnr)
     bufnr = bufnr or vim.api.nvim_get_current_buf()
-    local ns = vim.api.nvim_create_namespace("devsecinspect_alerts")
+    local ns = vim.api.nvim_create_namespace "devsecinspect_alerts"
 
     AlertsUi.clear(bufnr)
 
     -- tools
-    local tools = require("devsecinspect.tools")
+    local tools = require "devsecinspect.tools"
     AlertsUi.render_tools(tools.tools)
 
     -- TODO(geekmasher): what about results in other files / buffers?
@@ -208,7 +206,7 @@ function AlertsUi.render(bufnr)
         if AlertsUi.config.panel.enabled == false and AlertsUi.config.panel.auto_close == true then
             AlertsUi.close()
         end
-        utils.debug("ui.alerts.render: No alerts found")
+        utils.debug "ui.alerts.render: No alerts found"
         return
     end
 
@@ -239,10 +237,9 @@ function AlertsUi.render_alert_tree(bufnr, alerts)
     -- alerts
     AlertsUi.append_data({ "Alerts", "" }, { header = true })
 
-
     for category, instances in pairs(alerts) do
         local display_alerts = {
-            " > " .. category
+            " > " .. category,
         }
 
         for instance, alert in pairs(instances) do
@@ -316,7 +313,7 @@ function AlertsUi.render_tools(tools)
 
     AlertsUi.append_data(available_tools, {
         header = { "Tools", "" },
-        footer = true
+        footer = true,
     })
 end
 
@@ -326,7 +323,7 @@ end
 function AlertsUi.render_summarised(bufnr, alerts)
     AlertsUi.clear_diagnostics(bufnr)
 
-    local ns = vim.api.nvim_create_namespace("devsecinspect_alerts")
+    local ns = vim.api.nvim_create_namespace "devsecinspect_alerts"
 
     local total_summary = {
         critical = 0,
@@ -358,8 +355,8 @@ function AlertsUi.render_summarised(bufnr, alerts)
                     }
                 end
 
-                line_summaries[alert.location.line][alert.severity] = line_summaries[alert.location.line]
-                    [alert.severity] + 1
+                line_summaries[alert.location.line][alert.severity] = line_summaries[alert.location.line][alert.severity]
+                    + 1
             end
         end
     end
@@ -369,7 +366,8 @@ function AlertsUi.render_summarised(bufnr, alerts)
     end
 
     local render_summary = {
-        "Alert Summary", "",
+        "Alert Summary",
+        "",
         " > Critical: " .. total_summary.critical,
         " > High: " .. total_summary.high,
         " > Medium: " .. total_summary.medium,
@@ -414,7 +412,7 @@ end
 ---@param bufnr integer
 ---@param alert table
 function AlertsUi.show_alert_diagnostic(bufnr, alert)
-    local ns = vim.api.nvim_create_namespace("devsecinspect_alerts")
+    local ns = vim.api.nvim_create_namespace "devsecinspect_alerts"
 
     local location = alert.location or {}
     local text = AlertsUi.find_severity_symbol(alert.severity) .. " " .. alert.name
@@ -428,15 +426,12 @@ function AlertsUi.show_alert_diagnostic(bufnr, alert)
     -- end
 
     -- check to see if the full mode is enabled
-    vim.api.nvim_buf_set_extmark(
-        bufnr, ns, location.line, 0,
-        {
-            hl_mode = "replace",
-            hl_group = "Alert",
-            virt_text_pos = "eol",
-            virt_text = { { text } }
-        }
-    )
+    vim.api.nvim_buf_set_extmark(bufnr, ns, location.line, 0, {
+        hl_mode = "replace",
+        hl_group = "Alert",
+        virt_text_pos = "eol",
+        virt_text = { { text } },
+    })
 end
 
 --- Show the summary diagnostic information
@@ -453,25 +448,20 @@ end
 ---@param line integer
 ---@param summary table
 function AlertsUi.show_summary_diagnostic(bufnr, line, summary)
-    local ns = vim.api.nvim_create_namespace("devsecinspect_alerts")
+    local ns = vim.api.nvim_create_namespace "devsecinspect_alerts"
 
     for severity, count in pairs(summary) do
-        if count == 0 then
-            goto continue
-        end
-        local severity_symbol = AlertsUi.find_severity_symbol(severity)
+        if count ~= 0 then
+            local severity_symbol = AlertsUi.find_severity_symbol(severity)
 
-        local text = severity_symbol .. " " .. count .. " " .. severity .. " alerts"
-        vim.api.nvim_buf_set_extmark(
-            bufnr, ns, line, 0,
-            {
+            local text = severity_symbol .. " " .. count .. " " .. severity .. " alerts"
+            vim.api.nvim_buf_set_extmark(bufnr, ns, line, 0, {
                 hl_mode = "replace",
                 hl_group = "Alert",
                 virt_text_pos = AlertsUi.config.text_position,
-                virt_text = { { text } }
-            }
-        )
-        ::continue::
+                virt_text = { { text } },
+            })
+        end
     end
 end
 

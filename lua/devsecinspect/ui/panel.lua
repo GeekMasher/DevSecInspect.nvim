@@ -1,10 +1,9 @@
-local utils = require("devsecinspect.utils")
+local utils = require "devsecinspect.utils"
 
 -- https://github.com/MunifTanjim/nui.nvim
-local Popup = require("nui.popup")
-local autocmd = require("nui.utils.autocmd")
+local Popup = require "nui.popup"
+local autocmd = require "nui.utils.autocmd"
 local event = autocmd.event
-
 
 local Debugging = {}
 -- Debugging config
@@ -20,7 +19,6 @@ Debugging.alerts = {}
 
 -- list of messages
 Debugging.messages = {}
-
 
 function Debugging.setup(opts)
     Debugging.config.symbols = opts.symbols
@@ -44,15 +42,15 @@ function Debugging.create(name, data, opts)
     local bufnr = vim.api.nvim_get_current_buf()
 
     if Debugging.panel == nil then
-        local panel = Popup({
+        local panel = Popup {
             enter = false,
             focusable = false,
             relative = "win",
             border = {
                 style = "rounded",
                 text = {
-                    top = ' DevSecInspect Debugging '
-                }
+                    top = " DevSecInspect Debugging ",
+                },
             },
             position = {
                 row = Debugging.config.panel.position.row or "79%",
@@ -64,12 +62,12 @@ function Debugging.create(name, data, opts)
             },
             buf_options = {
                 modifiable = true,
-                readonly = false
+                readonly = false,
             },
             win_options = {
                 winblend = 10,
-            }
-        })
+            },
+        }
 
         if not opts.persistent then
             autocmd.buf.define(bufnr, event.CursorMoved, function()
@@ -108,12 +106,12 @@ end
 function Debugging.on_resize()
     if Debugging.panel ~= nil then
         local config = require("devsecinspect.config").config
-        Debugging.panel:update_layout({
+        Debugging.panel:update_layout {
             size = {
                 width = config.debugging.panel.size.width,
                 height = config.debugging.panel.size.height,
-            }
-        })
+            },
+        }
     end
 end
 
@@ -162,7 +160,7 @@ end
 ---@param bufnr any
 ---@param filepath any
 function Debugging.render(bufnr, filepath)
-    filepath = filepath or vim.fn.expand("%:p")
+    filepath = filepath or vim.fn.expand "%:p"
 
     if Debugging.panel == nil or Debugging.config.enabled == false then
         Debugging.close()
@@ -193,7 +191,7 @@ function Debugging.append_tool(tool, opts)
     Debugging.tools[#Debugging.tools + 1] = {
         name = name,
         status = status,
-        message = opts.message
+        message = opts.message,
     }
 end
 
@@ -223,7 +221,7 @@ function Debugging.render_tools()
     -- add empty line
     Debugging.append_data(available_tools, {
         header = { "Setup Tools", "" },
-        footer = true
+        footer = true,
     })
 end
 
@@ -235,7 +233,7 @@ function Debugging.render_messages()
 
     Debugging.append_data(msgs, {
         header = { "Messages", "" },
-        footer = true
+        footer = true,
     })
 end
 
