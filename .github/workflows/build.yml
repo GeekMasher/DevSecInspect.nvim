@@ -33,7 +33,7 @@ jobs:
       - name: Run tests
         run: |
           set -e
-          nvim -u NONE -E -R --headless +q
+          nvim --headless -E -R -u tests/init.lua -c "DSI"
 
   lint:
     runs-on: ubuntu-latest
