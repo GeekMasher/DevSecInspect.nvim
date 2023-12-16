@@ -1,0 +1,61 @@
+markdown:
+  key: "tools"
+
+tools:
+  bandit:
+    name: "Bandit"
+    type: "sast"
+    description: "Bandit is a tool designed to find common security issues in Python code."
+    url: https://bandit.readthedocs.io/en/latest/
+    languages:
+      - Python
+
+  cargo-audit:
+    name: "Cargo Audit"
+    type: "sca"
+    description: "Audit your dependencies for crates with security vulnerabilities reported to the RustSec Advisory Database."
+    author: "RustSec"
+    url: https://github.com/RustSec/rustsec/tree/main/cargo-audit
+
+  npm-audit:
+    name: "NPM Audit"
+    type: "sca"
+    description: "Run a security audit for your Node Modules"
+    author: "GitHub"
+    url: https://docs.npmjs.com/cli/v10/commands/npm-audit
+
+  ghas:
+    name: "GitHub Advanced Security"
+    author: "GitHub"
+    type: "service"
+    url: https://github.com/features/security
+    languages:
+      - C
+      - Cpp
+      - Csharp
+      - Go
+      - Java
+      - Kotkin
+      - Swift
+      - JavaScript
+      - TypeScript
+      - Python
+      - Ruby
+
+  quibble:
+    name: "Quibble"
+    type: "sast"
+    description: "A container security tool written in Rust focusing on making security easy for compose based configurations."
+    author: "GeekMasher"
+    url: https://github.com/GeekMasher/quibble
+    languages:
+      - Docker Compose
+
+  semgrep:
+    name: "Semgrep"
+    type: "sast"
+    description: "Semgrep accelerates your security journey by swiftly scanning code and package dependencies for known issues, software vulnerabilities, and detected secrets with unparalleled efficiency."
+    author: "Semgrep"
+    url: https://github.com/semgrep/semgrep
+    languages:
+      - Python

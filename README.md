@@ -8,19 +8,18 @@
 
 </div>
 
-## Overview
+[DevSecInspect][dsirepo] is a [Neovim][neovim] plugin focusing on putting security results in the hands of Developers.
 
-[DevSecInspect](https://github.com/GeekMasher/DevSecInspect.nvim) is a [Neovim](https://neovim.io/) plugin focusing on putting security results in the hands of Developers.
+## ✨ Features
 
-### [Tools](./lua/devsecinspect/tools)
+- Automatic analyze code or dependencies
+- Fully Customizable
 
-- [Bandit](https://bandit.readthedocs.io/en/latest/) (Python SAST tool)
-- [Cargo Audit](https://github.com/RustSec/rustsec/tree/main/cargo-audit) (Rust SCA tool)
-- [GitHub](https://github.com/) (Service)
-- [NPM Audit](https://docs.npmjs.com/cli/v10/commands/npm-audit) (NPM SCA tool)
-- [Semgrep](https://github.com/semgrep/semgrep) (Multi-language SAST tool)
+## ⚡️ Requirements
 
-## Installing
+- [Neovim][neovim] `>= 0.9.0`
+
+## 📦 Installing
 
 **Lazy:**
 
@@ -39,6 +38,19 @@ return {
     }
 }
 ```
+
+### [Tools][tools]
+
+<!-- GENERATE: tools -->
+
+- [Bandit](https://bandit.readthedocs.io/en/latest/) (sast)
+- [Cargo Audit](https://github.com/RustSec/rustsec/tree/main/cargo-audit) (sca)
+- [GitHub Advanced Security](https://github.com/features/security) (service)
+- [NPM Audit](https://docs.npmjs.com/cli/v10/commands/npm-audit) (sca)
+- [Quibble](https://github.com/GeekMasher/quibble) (sast)
+- [Semgrep](https://github.com/semgrep/semgrep) (sast)
+
+<!-- GENERATE-END -->
 
 ## Configuration
 
@@ -111,3 +123,9 @@ Please create issues for any feature requests, bugs, or documentation problems.
 
 This project is licensed under the terms of the MIT open source license.
 Please refer to [MIT](./LICENSE.md) for the full terms.
+
+<!-- resources / references -->
+
+[dsirepo]: https://github.com/GeekMasher/DevSecInspect.nvim
+[neovim]: https://neovim.io/
+[tools]: ./tools
