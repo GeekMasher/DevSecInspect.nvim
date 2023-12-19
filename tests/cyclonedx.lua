@@ -1,4 +1,4 @@
-local cyclonedx = require("devsecinspect.utils.cyclonedx")
+local cyclonedx = require "devsecinspect.utils.cyclonedx"
 
 local data = {
     components = {
@@ -13,7 +13,7 @@ local data = {
         timestamp = "2023-12-19T21:57:51.298177+00:00",
         name = "cyclonedx-python-lib",
         vendor = "CycloneDX",
-        version = "4.2.3"
+        version = "4.2.3",
     },
     serialNumber = "urn:uuid:2e6860cd-f7f6-475b-ac5f-4db6908a1190",
     version = 1,
@@ -22,9 +22,9 @@ local data = {
             ["bom-ref"] = "598f1978-6e77-440c-99aa-ac2fa7cf3374",
             description = "Werkzeug is a comprehensive WSGI web application library...",
             id = "PYSEC-2023-221",
-            recommendation = "Upgrade"
-        }
-    }
+            recommendation = "Upgrade",
+        },
+    },
 }
 
 describe("CycloneDX", function()
