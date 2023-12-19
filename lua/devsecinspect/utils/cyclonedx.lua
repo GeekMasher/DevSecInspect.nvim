@@ -1,5 +1,5 @@
-local utils = require("devsecinspect.utils")
-local Alert = require("devsecinspect.alerts.alert")
+local Alert = require "devsecinspect.alerts.alert"
+local utils = require "devsecinspect.utils"
 
 local M = {}
 
@@ -39,7 +39,7 @@ function M.processJson(cyclonedx_data, filepath, opts)
         return nil
     end
 
-    if cyclonedx_data['bomFormat'] ~= "CycloneDX" then
+    if cyclonedx_data["bomFormat"] ~= "CycloneDX" then
         utils.warning("Failed to parse CycloneDX file: " .. filepath)
         return nil
     end
@@ -48,17 +48,17 @@ function M.processJson(cyclonedx_data, filepath, opts)
     local locations = opts.locations or {}
     -- build a table of all the components in the bom
     local components = {}
-    for i, comp in ipairs(cyclonedx_data['components']) do
-        components[comp['bom-ref']] = comp['name']
+    for i, comp in ipairs(cyclonedx_data["components"]) do
+        components[comp["bom-ref"]] = comp["name"]
     end
 
     for i, vulnerability in ipairs(cyclonedx_data.vulnerabilities) do
         -- lookup the component name from the bom-ref
-        local bomref = vulnerability['bom-ref']
+        local bomref = vulnerability["bom-ref"]
         local depname = components[bomref]
         local location = locations[depname] or {}
 
-        local alert = Alert:new('pip-audit', vulnerability['id'], location, {})
+        local alert = Alert:new("pip-audit", vulnerability["id"], location, {})
 
         table.insert(results, alert)
     end
