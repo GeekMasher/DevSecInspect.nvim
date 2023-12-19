@@ -26,6 +26,12 @@ M.tools = {
         type = "sca",
         tool = require "devsecinspect.tools.npmaudit",
     },
+    pipaudit = {
+        name = "Pip Audit",
+        author = "PyPI",
+        type = "sca",
+        tool = require "devsecinspect.tools.pipaudit",
+    },
     -- SAST
     codeql = {
         name = "CodeQL",
