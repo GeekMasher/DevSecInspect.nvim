@@ -355,8 +355,7 @@ function AlertsUi.render_summarised(bufnr, alerts)
                     }
                 end
 
-                line_summaries[alert.location.line][alert.severity] = line_summaries[alert.location.line]
-                    [alert.severity]
+                line_summaries[alert.location.line][alert.severity] = line_summaries[alert.location.line][alert.severity]
                     + 1
             end
         end
