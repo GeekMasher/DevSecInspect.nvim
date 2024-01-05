@@ -60,7 +60,9 @@ function Tools.create(name, data, opts)
     end
 end
 
-function Tools.on_resize() end
+function Tools.on_resize()
+    -- TODO(geekmasher): add resize support for tools panel
+end
 
 --- Open the panel
 function Tools.open()

@@ -104,7 +104,7 @@ function Debugging.clear()
 end
 
 function Debugging.on_resize()
-    if Debugging.panel ~= nil then
+    if Debugging.panel ~= nil and Debugging.panel.mounted ~= nil then
         local config = require("devsecinspect.config").config
         Debugging.panel:update_layout {
             size = {

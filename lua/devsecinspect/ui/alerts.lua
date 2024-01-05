@@ -123,7 +123,7 @@ function AlertsUi.clear_diagnostics(bufnr)
 end
 
 function AlertsUi.on_resize()
-    if AlertsUi.panel ~= nil then
+    if AlertsUi.panel ~= nil and AlertsUi.panel.mounted ~= nil then
         AlertsUi.panel:update_layout {
             size = {
                 width = AlertsUi.config.panel.size.width,
@@ -355,7 +355,8 @@ function AlertsUi.render_summarised(bufnr, alerts)
                     }
                 end
 
-                line_summaries[alert.location.line][alert.severity] = line_summaries[alert.location.line][alert.severity]
+                line_summaries[alert.location.line][alert.severity] = line_summaries[alert.location.line]
+                    [alert.severity]
                     + 1
             end
         end
